@@ -1,0 +1,17 @@
+disk_total_num=4
+data_disk_num=2
+disk_block_size=4096
+disk_raid_type=1000
+space_list_num=0
+0.dev_name=/dev/etherd/e5.1
+0.free_offset=0
+0.free_size=314572800
+1.dev_name=/dev/etherd/e5.2
+1.free_offset=0
+1.free_size=314572800
+2.dev_name=/dev/etherd/e5.3
+2.free_offset=0
+2.free_size=314572800
+3.dev_name=/dev/etherd/e5.4
+3.free_offset=0
+3.free_size=314572800
