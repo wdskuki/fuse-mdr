@@ -47,6 +47,7 @@ ncfs_destroy()
 #include "../coding/coding_src_rs.hh"
 #include "../coding/coding_rs.hh"
 #include "../coding/coding_mbr.hh"
+#include "../coding/coding_mdr1.hh"
 
 #include <ctype.h>
 #include <dirent.h>
@@ -1103,6 +1104,10 @@ CodingLayer* initializeCodingLayer()
 		case 130: return new Coding4SrcRS();break;
 		case 100: return new Coding4Jbod;break;
 		case 1000: return new Coding4Mbr();break;
+
+		// add by wds on Jun 30, 2014 begin
+		case 61: return new Coding4Mdr1(); break;
+		// add by wds on Jun 30, 2014 end
 	}
 
 	//AbnormalError();

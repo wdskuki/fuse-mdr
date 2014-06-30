@@ -39,7 +39,7 @@
 #include "../coding/coding_rs.hh"
 #include "../coding/coding_src_rs.hh"
 #include "../coding/coding_mbr.hh"
-
+#include "../coding/coding_mdr1.hh"
 
 
 struct ncfs_state* NCFS_DATA;
@@ -591,6 +591,97 @@ int RecoverUsingMultiThreads_SOR(int fail_disk_id){
 }
 
 
+//Add by wds on Jun. 30, 2014 begin.
+int mdr_I_recover_one_disk(int fail_disk_id){
+	  	
+	  	//printf("debug: mdr_I_recover()\n");
+
+		Coding4Mdr1 * coding_mdr1 = dynamic_cast<Coding4Mdr1* >(fileSystemLayer->codingLayer);
+
+	    NCFS_DATA->process_state = 1;
+	    int __recoversize = NCFS_DATA->disk_size[fail_disk_id];
+
+	    int strip_size = coding_mdr1->mdr_I_get_strip_size();
+	    int disk_total_num = NCFS_DATA->disk_total_num;
+	    int block_size = NCFS_DATA->disk_block_size;
+
+	    struct timeval starttime, endtime;
+	    double duration;
+	    double data_size;
+
+	    gettimeofday(&starttime,NULL);
+	    NCFS_DATA->dev_name[fail_disk_id] = (char*)realloc(NCFS_DATA->dev_name[fail_disk_id],strlen(_newdevice));
+
+	    memset(NCFS_DATA->dev_name[fail_disk_id],0,strlen(_newdevice)+1);
+	    strncpy(NCFS_DATA->dev_name[fail_disk_id],_newdevice,strlen(_newdevice));
+	    cacheLayer->setDiskName(fail_disk_id,_newdevice);
+
+	    //storageLayer->disk_fd[fail_disk_id] = open(NCFS_DATA->dev_name[fail_disk_id],O_RDWR);
+	    //storageLayer->DiskRenew(fail_disk_id);
+
+	   	char*** pread_stripes;
+	   	int r = strip_size / 2;
+	    pread_stripes = (char ***)malloc(sizeof(char** ) * r);
+	    for(int i = 0; i < r; i++){
+	    	pread_stripes[i] = (char **)malloc(sizeof(char* )* disk_total_num);
+	    	for(int j = 0; j < disk_total_num; j++){
+	    		pread_stripes[i][j] = (char *)malloc(sizeof(char)* block_size);
+	    		//memset(pread_stripes[i][j], 0, block_size);
+	    	}
+	    }
+
+	    // int r = strip_size / 2;
+	    // char pread_stripes[r][disk_total_num][block_size];
+		
+	    for(int i = 0; i < __recoversize; i += strip_size){
+		    for(int i = 0; i < r; i++){
+		    	for(int j = 0; j < disk_total_num; j++){
+		    		memset(pread_stripes[i][j], 0, block_size);
+		    	}
+		    }
+
+		    long long offset = i * block_size;
+
+		    long long buf_size = strip_size * block_size;
+		    char buf[buf_size];
+
+		    int retstat = coding_mdr1->mdr_I_recover_oneStripeGroup(fail_disk_id, 
+		    												buf, buf_size, offset, pread_stripes);
+		    retstat = cacheLayer->writeDisk(fail_disk_id,buf,strip_size*block_size,offset);
+	    }
+	    
+	    for(int i = 0; i < r; i++){
+	    	for(int j = 0; j < disk_total_num; j++){
+	    		free(pread_stripes[i][j]);
+	    	}
+	    	free(pread_stripes[i]);
+	    }
+	    free(pread_stripes);	    
+
+
+	    //NCFS_DATA->disk_status[fail_disk_id] = 0;
+	    fileSystemLayer->set_device_status(fail_disk_id,0);
+
+	    gettimeofday(&endtime,NULL);
+
+	    fprintf(stderr,"\n\n\nRecovery on disk %d, new device %s Done.\n\n\n",fail_disk_id,_newdevice);
+
+	    duration = endtime.tv_sec - starttime.tv_sec + (endtime.tv_usec-starttime.tv_usec)/1000000.0;
+	    data_size  = __recoversize * (NCFS_DATA->disk_block_size) / (1024 * 1024);
+	    
+	    //printf("Elapsed Time = %fs\n", duration);
+	    printf("Elapsed Time = %f\n", duration);
+	    printf("Repair Throughput = %f MB/s\n", (float)(data_size / duration));
+	    printf("Storage Node Size = %f MB\n", (float)data_size);
+	    printf("Block Size = %d B\n", NCFS_DATA->disk_block_size);
+			
+	    NCFS_DATA->process_state = 0;
+	    return 0;
+	    
+}
+//Add by wds on Jun. 30, 2014 end
+
+
 void RecoveryTool::recover(){
 	int coding_type = NCFS_DATA->disk_raid_type;
 	int disk_total_num = NCFS_DATA->disk_total_num;
@@ -610,6 +701,11 @@ void RecoveryTool::recover(){
 		if (fail_disk_num == 1){
 
 			if(_rebuild_method==0){
+				//add by wds on Jun 30, 2014 begin
+				if(coding_type == 61){
+					mdr_I_recover_one_disk(fail_disk_id);
+				}
+				//add by wds on Jun 30, 2014 end
 
 				printf("CASE 1: Traditional Recover Method By Downloading Full File.\n");
 
@@ -684,6 +780,10 @@ CodingLayer* initializeCodingLayer(){
 		case 130: return new Coding4SrcRS();break;
 		case 100: return new Coding4Jbod;break;
 		case 1000: return new Coding4Mbr();break;
+
+		//add by wds on Jun 30, 2014 begin
+		case 61: return new Coding4Mdr1(); break;
+		//add by wds on Jun 30, 2014 end
 	}
 
 	//AbnormalError();
