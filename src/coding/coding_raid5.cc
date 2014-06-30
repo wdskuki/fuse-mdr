@@ -163,7 +163,6 @@ struct data_block_info Coding4Raid5::encode(const char* buf, int size)
                 retstat = cacheLayer->writeDisk(disk_id,buf,size,block_no*block_size);
                 //Cache End
 
-
 		//Cache Start
 		//write parity
 		retstat = cacheLayer->writeDisk(parity_disk_id,buf2,size,block_no*block_size);

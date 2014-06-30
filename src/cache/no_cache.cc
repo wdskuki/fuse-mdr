@@ -32,6 +32,7 @@ long long NoCache::readDisk(int disk_id, char* buf, long long size, long long of
 }
 
 long long NoCache::writeDisk(int disk_id, const char* buf, long long size, long long offset){
+
 	return storageLayer->DiskWrite(NCFS_DATA->dev_name[disk_id],buf,size,offset);
 }
 

@@ -640,8 +640,8 @@ void FileSystemLayer::readSystemConfig(struct ncfs_state* ncfs_data){
 	ncfs_data->ip_addr = (char **)calloc(ncfs_data->disk_total_num, sizeof(char *));
 	//Add by zhuyunfeng on July 5,2011 end.
 	
-		char targetDisk[50];
-		char tempString[256];
+	char targetDisk[50];
+	char tempString[256];
 	for(int i = 0; i < ncfs_data->disk_total_num; ++i){
 		memset(targetDisk,0,50);
 		sprintf(targetDisk,"FileSystem>Disk>DiskSetting>Disk%d>",i+1);

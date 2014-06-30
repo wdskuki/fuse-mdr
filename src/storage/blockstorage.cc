@@ -310,11 +310,12 @@ int BlockStorage::DiskWrite(const char* path, const char* buf, long long size,
 		return retstat;
 	}
 
-        //Add by zhuyunfeng on Sep 4, 2011 begin.
-	//Write data to the disk immediately
-	fsync(fd);
-	//Add by zhuyunfeng on Sep 4, 2011 end.
-	
+	//Modify by wds on Jun 28, 2014 begin
+	// //Add by zhuyunfeng on Sep 4, 2011 begin.
+	// //Write data to the disk immediately
+	// fsync(fd);
+	// //Add by zhuyunfeng on Sep 4, 2011 end.
+	//Modify by wds on Jun 28, 2014 end
 
 	close(fd);
 

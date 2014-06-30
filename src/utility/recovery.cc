@@ -772,7 +772,7 @@ int main(int argc, char *args[]){
 				j,ncfs_data->dev_name[j], ncfs_data->free_offset[j],ncfs_data->free_size[j]);
 	}
 
-	//initialize gobal objects
+	//initialize global objects
 	NCFS_DATA = ncfs_data;
 
 	recovery_init();

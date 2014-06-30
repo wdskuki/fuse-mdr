@@ -3,12 +3,12 @@
 	<FileSystem>
 		<Setting>
 			<NoCache>1</NoCache>
-			<NoGui>0</NoGui>
-			<Experiment>0</Experiment>
+			<NoGui>1</NoGui>
+			<Experiment>1</Experiment>
 		</Setting>
 		<Disk>
-			<TotalDiskNumber>6</TotalDiskNumber>
-			<DataDiskNumber>3</DataDiskNumber>
+			<TotalDiskNumber>5</TotalDiskNumber>
+			<DataDiskNumber>4</DataDiskNumber>
 			<BlockSize>4096</BlockSize>
 			<RaidType>5</RaidType>
 			<Src>
@@ -20,7 +20,7 @@
 					<TotalSize>1048576</TotalSize>
 					<FreeOffset>0</FreeOffset>
 					<FreeSize>1048576</FreeSize>
-					<IPaddr>127.0.0.1</IPaddr>
+					<IPaddr>10.141.251.63</IPaddr>
 				</Disk1>
 				<Disk2>
 					<DevName>/dev/loop2</DevName>
@@ -43,20 +43,13 @@
 					<FreeSize>1048576</FreeSize>
 					<IPaddr>127.0.0.1</IPaddr>
 				</Disk4>
-                                <Disk5>
-                                        <DevName>/dev/loop5</DevName>
-                                        <TotalSize>1048576</TotalSize>
-                                        <FreeOffset>0</FreeOffset>
-                                        <FreeSize>1048576</FreeSize>
-                                        <IPaddr>127.0.0.1</IPaddr>
-                                </Disk5>
-                                <Disk6>
-                                        <DevName>/dev/loop6</DevName>
-                                        <TotalSize>1048576</TotalSize>
-                                        <FreeOffset>0</FreeOffset>
-                                        <FreeSize>1048576</FreeSize>
-                                        <IPaddr>127.0.0.1</IPaddr>
-                                </Disk6>
+				<Disk5>
+					<DevName>/dev/loop5</DevName>
+					<TotalSize>1048576</TotalSize>
+					<FreeOffset>0</FreeOffset>
+					<FreeSize>1048576</FreeSize>
+					<IPaddr>127.0.0.1</IPaddr>
+				</Disk5>
 			</DiskSetting>
 		</Disk>
 	</FileSystem>

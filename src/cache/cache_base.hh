@@ -27,7 +27,7 @@ class CacheLayerBase{
 		 *
 		 * @return number of bytes sucessfully written
 		 */
-		virtual long long writeDisk(int disk_id, const char* buf, long long size,	long long offset) = 0;
+		virtual long long writeDisk(int disk_id, const char* buf, long long size, long long offset) = 0;
 
 		/**
 		 * Set the Disk Name of a specified disk,

@@ -19,7 +19,7 @@ class CacheLayer : public CacheLayerBase{
 		CacheLayer(struct ncfs_state* ncfs_data);
 
 		long long readDisk(int disk_id, char* buf, long long size, long long offset);
-		long long writeDisk(int disk_id, const char* buf, long long size,	long long offset);
+		long long writeDisk(int disk_id, const char* buf, long long size, long long offset);
 		void setDiskName(int disk_id, const char* newdevice);
 		/*
 		void flushDisks(long long offset);
@@ -42,6 +42,7 @@ class CacheLayer : public CacheLayerBase{
 
 		void addThreadJob(BufferTemplate* targetBuffer, BufferJobType job,long long offset = -1);
 		~CacheLayer();
+
 	private:
 		CacheThreadPool threadPool_;
 

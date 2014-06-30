@@ -1,6 +1,7 @@
 #include "cache.hh"
 #include "../filesystem/filesystem_common.hh"
 #include "../config/config.hh"
+#include <stdio.h>
 
 extern struct ncfs_state* NCFS_DATA;
 extern ConfigLayer* configLayer;
@@ -52,7 +53,7 @@ long long CacheLayer::readDisk(int disk_id, char* buf, long long size, long long
 {
 	if(disk_id < 0 || disk_id >= numOfDisk_)
 		return FATALERROR;
-		
+
 	return diskCache_[disk_id].read(buf,size,offset);
 
 }
@@ -61,7 +62,7 @@ long long CacheLayer::writeDisk(int disk_id, const char* buf, long long size, lo
 {
 	if(disk_id < 0 || disk_id >= numOfDisk_)
 		return FATALERROR;
-	
+
 	return diskCache_[disk_id].write(buf,size,offset);
 	
 	
