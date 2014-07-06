@@ -476,19 +476,44 @@ encode(const char *buf, int size)
 
 		
 		//read P block
+        if (NCFS_DATA->run_experiment == 1){
+        	gettimeofday(&t1,NULL);
+        }
+
 		retstat = cacheLayer->readDisk(p_disk_id, buf_p_disk, 
 			size_request, block_no * block_size);		
-		
+
+		if (NCFS_DATA->run_experiment == 1){
+			gettimeofday(&t2,NULL);
+			duration = (t2.tv_sec - t1.tv_sec) + 
+				(t2.tv_usec-t1.tv_usec)/1000000.0;
+			NCFS_DATA->diskread_time += duration;			
+		}
+
+
 		//calculate new P block
 		for (j = 0; j < size_request; j++) {
 			buf_p_disk[j] = buf_p_disk[j] ^ buf[j];
+		}
+
+		if (NCFS_DATA->run_experiment == 1){
+			gettimeofday(&t1,NULL);
+			duration = (t1.tv_sec - t2.tv_sec) + 
+				(t1.tv_usec-t2.tv_usec)/1000000.0;
+			NCFS_DATA->encoding_time += duration;
 		}
 
 		//write new P block
 		retstat = cacheLayer->writeDisk(p_disk_id, buf_p_disk, size, 
 			block_no * block_size);		
 
-		//read Q block
+		if (NCFS_DATA->run_experiment == 1){
+			gettimeofday(&t2,NULL);
+			duration = (t2.tv_sec - t1.tv_sec) + 
+				(t2.tv_usec-t1.tv_usec)/1000000.0;
+			NCFS_DATA->diskwrite_time += duration;			
+		}
+
 		int strip_num = block_no / strip_size;
 		int strip_offset = block_no % strip_size;
 
@@ -503,24 +528,59 @@ encode(const char *buf, int size)
 
 			//read Q blk
 			memset(buf_q_disk, 0, size_request);
+	        
+	        if (NCFS_DATA->run_experiment == 1){
+        		gettimeofday(&t1,NULL);
+        	}
 
 			retstat = cacheLayer->readDisk(q_disk_id, buf_q_disk, 
 				size_request, q_blk_no * block_size);	
+
+		    if (NCFS_DATA->run_experiment == 1){
+        		gettimeofday(&t2,NULL);
+        		duration = (t2.tv_sec - t1.tv_sec) + 
+					(t2.tv_usec-t1.tv_usec)/1000000.0;
+				NCFS_DATA->diskread_time += duration;
+        	}
 
 			//calculate new Q blk
 			for (j = 0; j < size_request; j++) {
 				buf_q_disk[j] = buf_q_disk[j] ^ buf[j];
 			}
 
+		    if (NCFS_DATA->run_experiment == 1){
+        		gettimeofday(&t1,NULL);
+        		duration = (t1.tv_sec - t2.tv_sec) + 
+					(t1.tv_usec-t2.tv_usec)/1000000.0;
+				NCFS_DATA->encoding_time += duration;        	
+        	}		
+
 			//write new Q blk
 			retstat = cacheLayer->writeDisk(q_disk_id, buf_q_disk, size, 
-				q_blk_no * block_size);			
+				q_blk_no * block_size);		
+
+			if (NCFS_DATA->run_experiment == 1){
+        		gettimeofday(&t2,NULL);
+        		duration = (t2.tv_sec - t1.tv_sec) + 
+					(t2.tv_usec-t1.tv_usec)/1000000.0;
+				NCFS_DATA->diskwrite_time += duration;
+        	}	
 		}
 
 		//write buf
+		if (NCFS_DATA->run_experiment == 1){
+       		gettimeofday(&t1,NULL);
+        }
+
 		retstat = cacheLayer->writeDisk(disk_id, buf, size, 
 			block_no * block_size);			
-
+		if (NCFS_DATA->run_experiment == 1){
+       		gettimeofday(&t2,NULL);
+        	duration = (t2.tv_sec - t1.tv_sec) + 
+				(t2.tv_usec-t1.tv_usec)/1000000.0;
+			NCFS_DATA->diskwrite_time += duration;
+        }
+		
 		free(buf_p_disk);
 		free(buf_q_disk);
 	}
@@ -569,7 +629,19 @@ int Coding4Mdr1::decode(int disk_id, char *buf, long long size,
 	p_disk_id = disk_total_num - 2;
 
 	if (NCFS_DATA->disk_status[disk_id] == 0) {
+
+		if (NCFS_DATA->run_experiment == 1){
+        	gettimeofday(&t1,NULL);
+        }
+
 		retstat = cacheLayer->readDisk(disk_id, buf, size, offset);
+		if (NCFS_DATA->run_experiment == 1){
+        	gettimeofday(&t2,NULL);
+        	duration = (t2.tv_sec - t1.tv_sec) + 
+				(t2.tv_usec-t1.tv_usec)/1000000.0;
+			NCFS_DATA->diskread_time += duration;
+        }		
+
 		return retstat;
 	}
 	else{
@@ -666,11 +738,30 @@ int Coding4Mdr1::decode(int disk_id, char *buf, long long size,
 											//printf("debug_count = %d, 
 											//[disk_id, block_no] = [%d, %d]\n",
 											// ++debug_count, ii, i2_blk_num);
+											if (NCFS_DATA->run_experiment == 1){
+        										gettimeofday(&t1,NULL);
+        									}
 											retstat = cacheLayer->readDisk(
 												ii, temp_buf, size, i2_blk_num*block_size);
+										
+											if (NCFS_DATA->run_experiment == 1){
+        										gettimeofday(&t2,NULL);
+        										duration = (t2.tv_sec - t1.tv_sec) + 
+													(t2.tv_usec-t1.tv_usec)/1000000.0;
+												NCFS_DATA->diskread_time += duration;
+        									}
+
 											for(long long j = 0; j < size; j++){
 												buf[j] = buf[j] ^ temp_buf[j];
 											}
+
+											if (NCFS_DATA->run_experiment == 1){
+        										gettimeofday(&t1,NULL);
+        										duration = (t1.tv_sec - t2.tv_sec) + 
+													(t1.tv_usec-t2.tv_usec)/1000000.0;
+												NCFS_DATA->decoding_time += duration;
+        									}
+
 										}
 									}
 								}
@@ -686,13 +777,32 @@ int Coding4Mdr1::decode(int disk_id, char *buf, long long size,
 									//printf("debug_count = %d, 
 									//[disk_id, block_no] = [%d, %d]\n",
 									// ++debug_count, i, blk_num);
-		
+
+									if (NCFS_DATA->run_experiment == 1){
+        								gettimeofday(&t1,NULL);
+        							}		
+									
 									retstat = cacheLayer->readDisk(
 										i, temp_buf, size, blk_num * block_size);
 
+									if (NCFS_DATA->run_experiment == 1){
+        								gettimeofday(&t2,NULL);
+        								duration = (t2.tv_sec - t1.tv_sec) + 
+											(t2.tv_usec-t1.tv_usec)/1000000.0;
+										NCFS_DATA->diskread_time += duration;
+        							}
+									
 									for(long long j = 0; j < size; j++){
 										buf[j] = buf[j] ^ temp_buf[j];
 									}
+											
+									if (NCFS_DATA->run_experiment == 1){
+        								gettimeofday(&t1,NULL);
+        								duration = (t1.tv_sec - t2.tv_sec) + 
+											(t1.tv_usec-t2.tv_usec)/1000000.0;
+										NCFS_DATA->decoding_time += duration;
+        							}
+        							
 								}
 							}
 						}

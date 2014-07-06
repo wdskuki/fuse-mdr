@@ -15,8 +15,10 @@ raid_metadata:
 - Record filessytem's information when filesystem shutdown.
 
 raid_setting:
-- Record raid information(e.g. total disks, block_size, raid_type, each raid information,...)
-- 
+- save raid information(e.g. total disks, block_size, raid_type, each raid information,...)
+- when filesystem shutdown, record these information on this file
+
+ 
 
 
 
