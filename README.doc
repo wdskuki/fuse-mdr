@@ -1,0 +1,48 @@
+﻿[编译]
+	进入到目录'ncfs-1.2.1'
+	键入‘make’进行编译
+	生成可执行文件：ncfs
+
+[Makefile]
+	Makefile文件
+
+[config.xml]
+	整个文件系统的初始化配置都在该文件中
+	具体可以参考config.xml， doc/等文档
+
+[setup.sh]
+	Usage: bash setup.sh (number of devices) (device size(MB))
+	生成多个img文件，然后通过/dev/loop*设备进行链接对应的img文件，通过/dev/loop*对img文件进行IO操作，将img模拟成磁盘
+	生成mountdir和rootdir，其中mountdir为文件系统的挂在目录，rootdir为文件系统的metadata所在的地方
+	这里的磁盘数(number of devices)、磁盘大小(device size(MB))必须和config.xml一致
+	清空raid_setting/raid_health/raid_metadata
+
+[clear.sh]
+	umount磁盘
+	删除img文件
+	清空 raid_setting/raid_health/raid_metadata
+
+[reset.sh]
+	重置回初始状态（删除、清空一些无关文件）
+
+[doc/]
+	帮助、说明文档
+
+[settings_template/]
+	暂不会涉及到
+
+[src/]源代码
+	-[cache]文件系统的缓存层实现代码
+	-[config]读取config.xml用的
+	-[gui]暂不会用到
+	-[jerasure] 设计到有限域运算操作
+	-[storage] 存储层
+	-[coding] 所有的编码实现源码
+	-[filesystem] 文件操作层源码
+	-[gui_java] 暂不会用到
+	-[network] 分布式搭建有关，暂不会用到
+	-[utility] 重要文件为recover.cc,主要用于修复。
+特别说明一下，重点关注*.cc和*.hh，对于*.c文件可以稍微放一下。
+
+整个文件系统的入口在src/filesystem/ncfs.cc文件，可以从这个文件的main函数开始。
+

@@ -33,7 +33,8 @@ void Coding4Mdr1::print_ivec(vector<int>& ivec){
 	cout<<endl;
 }
 
-void Coding4Mdr1::print_iivec(vector<vector<int> >& iivec){
+void Coding4Mdr1::print_iivec(vector<vector<int> >& 
+	iivec){
 	int iivec_size = iivec.size();
 	for(int i = 0; i < iivec_size; i++){
 		int ivec_size = iivec[i].size();
@@ -46,7 +47,10 @@ void Coding4Mdr1::print_iivec(vector<vector<int> >& iivec){
 	cout<<endl;
 }
 
-void Coding4Mdr1::print_ivmap(map<int, vector<vector<int> > >& ivmap, vector<int>& stripeIndexs){
+void Coding4Mdr1::print_ivmap(map<int, 
+	vector<vector<int> > >& ivmap, 
+	vector<int>& stripeIndexs)
+{
 	set<int> iset;
 	iset.insert(stripeIndexs.begin(), stripeIndexs.end());
 
@@ -70,7 +74,9 @@ void Coding4Mdr1::print_ivmap(map<int, vector<vector<int> > >& ivmap, vector<int
 	}
 }
 
-long long* Coding4Mdr1::mdr_I_iterative_construct_encoding_matrixB(long long *matrix, int k){
+long long* Coding4Mdr1::
+mdr_I_iterative_construct_encoding_matrixB(long long *matrix, int k)
+{
 	int i, j, t;
 	int row = (int)pow(2, k);
 	int col = k+1;
@@ -125,7 +131,9 @@ long long* Coding4Mdr1::mdr_I_iterative_construct_encoding_matrixB(long long *ma
 	}
 }
 
-void Coding4Mdr1::mdr_print_matrix(long long* matrix, int row, int col){
+void Coding4Mdr1::mdr_print_matrix(long long* matrix, 
+	int row, int col)
+{
 	for(int i = 0; i < row; i++){
 		for(int j = 0; j < col; j++)
 			printf("%lld\t",matrix[i*col+j]);
@@ -160,7 +168,9 @@ long long* Coding4Mdr1::mdr_I_encoding_matrix(int k){
 	return mdr_encoding_matrix_B;
 }
 
-vector<int> Coding4Mdr1::mdr_I_find_q_blocks_id(int disk_id, int block_no){
+vector<int> Coding4Mdr1::mdr_I_find_q_blocks_id(
+	int disk_id, int block_no)
+{
 	vector<int> ivec;
 
 	int row = strip_size;
@@ -182,14 +192,16 @@ vector<int> Coding4Mdr1::mdr_I_find_q_blocks_id(int disk_id, int block_no){
 	return ivec;
 }
 
-vector<vector<int> > Coding4Mdr1::mdr_I_repair_qDisk_blocks_id(int block_no){
+vector<vector<int> > Coding4Mdr1::
+mdr_I_repair_qDisk_blocks_id(int block_no){
 	vector<vector<int> > iivec;
 	int row = strip_size;
 	int col = NCFS_DATA->data_disk_num+1;
 	for(int i = 0; i < col; i++){
 		vector<int> ivec;
 		for(int j = 0; j < strip_size; j++){
-			if((mdr_I_encoding_matrixB[block_no*col+i]&(1<<(strip_size-j-1))) != 0){
+			if((mdr_I_encoding_matrixB[block_no*col+i]&
+				(1<<(strip_size-j-1))) != 0){
 				ivec.push_back(j);
 			}
 		}
@@ -199,7 +211,10 @@ vector<vector<int> > Coding4Mdr1::mdr_I_repair_qDisk_blocks_id(int block_no){
 }
 
 
-vector<int> Coding4Mdr1::mdr_I_repair_dpDisk_stripeIndexs_internal(int diskID, int val_k){
+vector<int> Coding4Mdr1::
+mdr_I_repair_dpDisk_stripeIndexs_internal(
+	int diskID, int val_k)
+{
 	vector<int> ivec;
 	if(val_k == 1){
 		if(diskID == 1){
@@ -212,7 +227,8 @@ vector<int> Coding4Mdr1::mdr_I_repair_dpDisk_stripeIndexs_internal(int diskID, i
 		}else{
 			cout<<"diskID = "<<diskID<<endl;
 			cout<<"val_k = "<<val_k<<endl;
-			printf("error: fail diskID is large than k in mdr_I_repair_dpDisk_stripeIndexs()\n");
+			printf("error: fail diskID is large \
+				than k in mdr_I_repair_dpDisk_stripeIndexs()\n");
 			exit(1);
 		}
 	}
@@ -220,12 +236,14 @@ vector<int> Coding4Mdr1::mdr_I_repair_dpDisk_stripeIndexs_internal(int diskID, i
 	int val_strip_size = (int)pow(2, val_k);
 	int r = val_strip_size / 2;
 	if(diskID >= 1 && diskID <= val_k-1){ 
-		vector<int> ivec_old = mdr_I_repair_dpDisk_stripeIndexs_internal(diskID, val_k-1);
+		vector<int> ivec_old = 
+		mdr_I_repair_dpDisk_stripeIndexs_internal(diskID, val_k-1);
 		set<int> iset;
 		iset.insert(ivec_old.begin(), ivec_old.end());
 
 		for(int i = 1; i <= val_strip_size; i++){
-			if((iset.find(i) != iset.end()) || (iset.find(i-r) != iset.end())){
+			if((iset.find(i) != iset.end()) ||
+			 (iset.find(i-r) != iset.end())){
 				ivec.push_back(i);
 			}
 		}
@@ -241,13 +259,16 @@ vector<int> Coding4Mdr1::mdr_I_repair_dpDisk_stripeIndexs_internal(int diskID, i
 		}
 		return ivec;
 	}else{
-		printf("error: fail diskID is large than k in mdr_I_repair_dpDisk_stripeIndexs()\n");
+		printf("error: fail diskID is large than k \
+			in mdr_I_repair_dpDisk_stripeIndexs()\n");
 		exit(1);
 	}
 }
 
-vector<int> Coding4Mdr1::mdr_I_repair_dpDisk_stripeIndexs(int diskID, int val_k){
-	vector<int> ivec = mdr_I_repair_dpDisk_stripeIndexs_internal(diskID+1, val_k);
+vector<int> Coding4Mdr1::
+mdr_I_repair_dpDisk_stripeIndexs(int diskID, int val_k){
+	vector<int> ivec = 
+	mdr_I_repair_dpDisk_stripeIndexs_internal(diskID+1, val_k);
 	int ivec_size = ivec.size();
 
 	vector<int> ivec2;
@@ -257,17 +278,23 @@ vector<int> Coding4Mdr1::mdr_I_repair_dpDisk_stripeIndexs(int diskID, int val_k)
 	return ivec2;
 }
 
-bool Coding4Mdr1::mdr_I_repair_if_blk_in_buf(int disk_id, int stripe_blk_offset, bool** isInbuf, vector<int>& stripeIndexs){
+bool Coding4Mdr1::
+mdr_I_repair_if_blk_in_buf(int disk_id, int stripe_blk_offset, 
+	bool** isInbuf, vector<int>& stripeIndexs)
+{
 	int vec_size = stripeIndexs.size();
 	for(int i = 0; i < vec_size; i++){
-		if((stripe_blk_offset == stripeIndexs[i]) && (isInbuf[i][disk_id] == true)){
+		if((stripe_blk_offset == stripeIndexs[i]) && 
+			(isInbuf[i][disk_id] == true)){
 			return true;
 		}
 	}
 	return false;
 }
 
-int Coding4Mdr1::mdr_I_repair_chg_blkIndexOffset_in_buf(int disk_id, int stripe_blk_offset, vector<int>& stripeIndexs){
+int Coding4Mdr1::
+mdr_I_repair_chg_blkIndexOffset_in_buf(int disk_id, 
+	int stripe_blk_offset, vector<int>& stripeIndexs){
 
 	int vec_size = stripeIndexs.size();
 	int count = 0;
@@ -280,8 +307,9 @@ int Coding4Mdr1::mdr_I_repair_chg_blkIndexOffset_in_buf(int disk_id, int stripe_
 }
 
 
-map<int, vector<vector<int> > > Coding4Mdr1::mdr_I_repair_dpDisk_nonstripeIndexs_blocks_no(int fail_disk_id, 
-														  vector<int>& stripeIndexs)
+map<int, vector<vector<int> > > Coding4Mdr1::
+mdr_I_repair_dpDisk_nonstripeIndexs_blocks_no(
+	int fail_disk_id, vector<int>& stripeIndexs)
 {
 
 	map<int, vector<vector<int> > > ivmap;
@@ -316,7 +344,8 @@ map<int, vector<vector<int> > > Coding4Mdr1::mdr_I_repair_dpDisk_nonstripeIndexs
 		}
 		//cout<<endl;
 		if(fail_disk_block_no == -1){
-			printf("error in mdr_I_repair_dpDisk_nonstripeIndexs_blocks_no()\n");
+			printf("error in \
+				mdr_I_repair_dpDisk_nonstripeIndexs_blocks_no()\n");
 			exit(1);
 		}
 
@@ -335,7 +364,8 @@ map<int, vector<vector<int> > > Coding4Mdr1::mdr_I_repair_dpDisk_nonstripeIndexs
  */
 Coding4Mdr1::Coding4Mdr1()
 {
-	mdr_I_encoding_matrixB = mdr_I_encoding_matrix(NCFS_DATA->data_disk_num);
+	mdr_I_encoding_matrixB = 
+	mdr_I_encoding_matrix(NCFS_DATA->data_disk_num);
 	strip_size = (int)pow(2, NCFS_DATA->data_disk_num);
 	mdr_I_one_dpDisk_fail_bool_m = false;
 	mdr_I_one_dpDisk_fail_bool_v = false;
@@ -346,7 +376,8 @@ Coding4Mdr1 :: ~Coding4Mdr1(){
 }
 
 
-struct data_block_info Coding4Mdr1::encode(const char *buf, int size)
+struct data_block_info Coding4Mdr1::
+encode(const char *buf, int size)
 {
 	int retstat, disk_id, block_no, disk_total_num, block_size;
 	int size_request, block_request, free_offset;
@@ -445,19 +476,44 @@ struct data_block_info Coding4Mdr1::encode(const char *buf, int size)
 
 		
 		//read P block
+        if (NCFS_DATA->run_experiment == 1){
+        	gettimeofday(&t1,NULL);
+        }
+
 		retstat = cacheLayer->readDisk(p_disk_id, buf_p_disk, 
 			size_request, block_no * block_size);		
-		
+
+		if (NCFS_DATA->run_experiment == 1){
+			gettimeofday(&t2,NULL);
+			duration = (t2.tv_sec - t1.tv_sec) + 
+				(t2.tv_usec-t1.tv_usec)/1000000.0;
+			NCFS_DATA->diskread_time += duration;			
+		}
+
+
 		//calculate new P block
 		for (j = 0; j < size_request; j++) {
 			buf_p_disk[j] = buf_p_disk[j] ^ buf[j];
+		}
+
+		if (NCFS_DATA->run_experiment == 1){
+			gettimeofday(&t1,NULL);
+			duration = (t1.tv_sec - t2.tv_sec) + 
+				(t1.tv_usec-t2.tv_usec)/1000000.0;
+			NCFS_DATA->encoding_time += duration;
 		}
 
 		//write new P block
 		retstat = cacheLayer->writeDisk(p_disk_id, buf_p_disk, size, 
 			block_no * block_size);		
 
-		//read Q block
+		if (NCFS_DATA->run_experiment == 1){
+			gettimeofday(&t2,NULL);
+			duration = (t2.tv_sec - t1.tv_sec) + 
+				(t2.tv_usec-t1.tv_usec)/1000000.0;
+			NCFS_DATA->diskwrite_time += duration;			
+		}
+
 		int strip_num = block_no / strip_size;
 		int strip_offset = block_no % strip_size;
 
@@ -472,24 +528,59 @@ struct data_block_info Coding4Mdr1::encode(const char *buf, int size)
 
 			//read Q blk
 			memset(buf_q_disk, 0, size_request);
+	        
+	        if (NCFS_DATA->run_experiment == 1){
+        		gettimeofday(&t1,NULL);
+        	}
 
 			retstat = cacheLayer->readDisk(q_disk_id, buf_q_disk, 
 				size_request, q_blk_no * block_size);	
+
+		    if (NCFS_DATA->run_experiment == 1){
+        		gettimeofday(&t2,NULL);
+        		duration = (t2.tv_sec - t1.tv_sec) + 
+					(t2.tv_usec-t1.tv_usec)/1000000.0;
+				NCFS_DATA->diskread_time += duration;
+        	}
 
 			//calculate new Q blk
 			for (j = 0; j < size_request; j++) {
 				buf_q_disk[j] = buf_q_disk[j] ^ buf[j];
 			}
 
+		    if (NCFS_DATA->run_experiment == 1){
+        		gettimeofday(&t1,NULL);
+        		duration = (t1.tv_sec - t2.tv_sec) + 
+					(t1.tv_usec-t2.tv_usec)/1000000.0;
+				NCFS_DATA->encoding_time += duration;        	
+        	}		
+
 			//write new Q blk
 			retstat = cacheLayer->writeDisk(q_disk_id, buf_q_disk, size, 
-				q_blk_no * block_size);			
+				q_blk_no * block_size);		
+
+			if (NCFS_DATA->run_experiment == 1){
+        		gettimeofday(&t2,NULL);
+        		duration = (t2.tv_sec - t1.tv_sec) + 
+					(t2.tv_usec-t1.tv_usec)/1000000.0;
+				NCFS_DATA->diskwrite_time += duration;
+        	}	
 		}
 
 		//write buf
+		if (NCFS_DATA->run_experiment == 1){
+       		gettimeofday(&t1,NULL);
+        }
+
 		retstat = cacheLayer->writeDisk(disk_id, buf, size, 
 			block_no * block_size);			
-
+		if (NCFS_DATA->run_experiment == 1){
+       		gettimeofday(&t2,NULL);
+        	duration = (t2.tv_sec - t1.tv_sec) + 
+				(t2.tv_usec-t1.tv_usec)/1000000.0;
+			NCFS_DATA->diskwrite_time += duration;
+        }
+		
 		free(buf_p_disk);
 		free(buf_q_disk);
 	}
@@ -538,7 +629,19 @@ int Coding4Mdr1::decode(int disk_id, char *buf, long long size,
 	p_disk_id = disk_total_num - 2;
 
 	if (NCFS_DATA->disk_status[disk_id] == 0) {
+
+		if (NCFS_DATA->run_experiment == 1){
+        	gettimeofday(&t1,NULL);
+        }
+
 		retstat = cacheLayer->readDisk(disk_id, buf, size, offset);
+		if (NCFS_DATA->run_experiment == 1){
+        	gettimeofday(&t2,NULL);
+        	duration = (t2.tv_sec - t1.tv_sec) + 
+				(t2.tv_usec-t1.tv_usec)/1000000.0;
+			NCFS_DATA->diskread_time += duration;
+        }		
+
 		return retstat;
 	}
 	else{
@@ -564,7 +667,8 @@ int Coding4Mdr1::decode(int disk_id, char *buf, long long size,
 				if(mdr_I_one_dpDisk_fail_bool_v == false){
 					mdr_I_one_dpDisk_fail_bool_v = true;
 					mdr_I_one_dpDisk_fail_stripeIndex = 
-						mdr_I_repair_dpDisk_stripeIndexs(disk_id, NCFS_DATA->data_disk_num);
+						mdr_I_repair_dpDisk_stripeIndexs(
+							disk_id, NCFS_DATA->data_disk_num);
 				}
 				
 				// cout<<"mdr_I_one_dpDisk_fail_stripeIndex:\n";
@@ -582,7 +686,8 @@ int Coding4Mdr1::decode(int disk_id, char *buf, long long size,
 
 					for(int i = 0; i < disk_total_num-1; i++){
 						if(i != disk_id){
-							retstat = cacheLayer->readDisk(i, temp_buf, size, offset);
+							retstat = cacheLayer->readDisk(
+								i, temp_buf, size, offset);
 							for(long long j = 0; j < size; j++){
 								buf[j] = buf[j] ^ temp_buf[j];
 							}
@@ -594,14 +699,16 @@ int Coding4Mdr1::decode(int disk_id, char *buf, long long size,
 						mdr_I_one_dpDisk_fail_bool_m = true;
 
 						mdr_I_one_dpDisk_fail_nonStripeIndex = 
-								mdr_I_repair_dpDisk_nonstripeIndexs_blocks_no(disk_id, 
-							 							mdr_I_one_dpDisk_fail_stripeIndex);
+							mdr_I_repair_dpDisk_nonstripeIndexs_blocks_no(
+								disk_id, mdr_I_one_dpDisk_fail_stripeIndex);
 					}					
 
 					// cout<<"mdr_I_one_dpDisk_fail_nonStripeIndex\n";
-					// print_ivmap(mdr_I_one_dpDisk_fail_nonStripeIndex, mdr_I_one_dpDisk_fail_stripeIndex);
+					// print_ivmap(mdr_I_one_dpDisk_fail_nonStripeIndex,
+					// mdr_I_one_dpDisk_fail_stripeIndex);
 
-					vector<vector<int> > iivec = mdr_I_one_dpDisk_fail_nonStripeIndex[strip_offset];
+					vector<vector<int> > iivec = 
+					mdr_I_one_dpDisk_fail_nonStripeIndex[strip_offset];
 
 					//cout<<"iivec:\n";
 					//print_iivec(iivec);
@@ -621,15 +728,40 @@ int Coding4Mdr1::decode(int disk_id, char *buf, long long size,
 							if(i == disk_id){
 								int ivec_size = iivec[i].size();
 								for(int i2 = 0; i2 < ivec_size; i2++){
-									int i2_blk_num = iivec[i][i2]+strip_num*strip_size;
+									int i2_blk_num = 
+									iivec[i][i2]+strip_num*strip_size;
 
-									for(int ii = 0; ii < disk_total_num-1; ii++){
+									for(int ii = 0; 
+										ii < disk_total_num-1; 
+										ii++){
 										if(ii != i){
-											//printf("debug_count = %d, [disk_id, block_no] = [%d, %d]\n", ++debug_count, ii, i2_blk_num);
-											retstat = cacheLayer->readDisk(ii, temp_buf, size, i2_blk_num*block_size);
+											//printf("debug_count = %d, 
+											//[disk_id, block_no] = [%d, %d]\n",
+											// ++debug_count, ii, i2_blk_num);
+											if (NCFS_DATA->run_experiment == 1){
+        										gettimeofday(&t1,NULL);
+        									}
+											retstat = cacheLayer->readDisk(
+												ii, temp_buf, size, i2_blk_num*block_size);
+										
+											if (NCFS_DATA->run_experiment == 1){
+        										gettimeofday(&t2,NULL);
+        										duration = (t2.tv_sec - t1.tv_sec) + 
+													(t2.tv_usec-t1.tv_usec)/1000000.0;
+												NCFS_DATA->diskread_time += duration;
+        									}
+
 											for(long long j = 0; j < size; j++){
 												buf[j] = buf[j] ^ temp_buf[j];
 											}
+
+											if (NCFS_DATA->run_experiment == 1){
+        										gettimeofday(&t1,NULL);
+        										duration = (t1.tv_sec - t2.tv_sec) + 
+													(t1.tv_usec-t2.tv_usec)/1000000.0;
+												NCFS_DATA->decoding_time += duration;
+        									}
+
 										}
 									}
 								}
@@ -639,15 +771,38 @@ int Coding4Mdr1::decode(int disk_id, char *buf, long long size,
 							if(i != disk_id){
 								int ivec_size = iivec[i].size();
 								for(int ii = 0; ii < ivec_size; ii++){
-									int blk_num = iivec[i][ii]+strip_num * strip_size;
+									int blk_num = iivec[i][ii]+
+									strip_num * strip_size;
 
-									//printf("debug_count = %d, [disk_id, block_no] = [%d, %d]\n", ++debug_count, i, blk_num);
-		
-									retstat = cacheLayer->readDisk(i, temp_buf, size, blk_num * block_size);
+									//printf("debug_count = %d, 
+									//[disk_id, block_no] = [%d, %d]\n",
+									// ++debug_count, i, blk_num);
 
+									if (NCFS_DATA->run_experiment == 1){
+        								gettimeofday(&t1,NULL);
+        							}		
+									
+									retstat = cacheLayer->readDisk(
+										i, temp_buf, size, blk_num * block_size);
+
+									if (NCFS_DATA->run_experiment == 1){
+        								gettimeofday(&t2,NULL);
+        								duration = (t2.tv_sec - t1.tv_sec) + 
+											(t2.tv_usec-t1.tv_usec)/1000000.0;
+										NCFS_DATA->diskread_time += duration;
+        							}
+									
 									for(long long j = 0; j < size; j++){
 										buf[j] = buf[j] ^ temp_buf[j];
 									}
+											
+									if (NCFS_DATA->run_experiment == 1){
+        								gettimeofday(&t1,NULL);
+        								duration = (t1.tv_sec - t2.tv_sec) + 
+											(t1.tv_usec-t2.tv_usec)/1000000.0;
+										NCFS_DATA->decoding_time += duration;
+        							}
+        							
 								}
 							}
 						}
@@ -672,8 +827,10 @@ int Coding4Mdr1::decode(int disk_id, char *buf, long long size,
 	return -1;
 }
 
-int Coding4Mdr1::mdr_I_recover_oneStripeGroup(int disk_id, char *buf, long long size,
-								long long offset, char*** pread_stripes)
+int Coding4Mdr1::
+mdr_I_recover_oneStripeGroup(
+	int disk_id, char *buf, long long size,
+	long long offset, char*** pread_stripes)
 {
 	int retstat;
 	char *temp_buf;
@@ -738,7 +895,8 @@ int Coding4Mdr1::mdr_I_recover_oneStripeGroup(int disk_id, char *buf, long long 
 				if(mdr_I_one_dpDisk_fail_bool_v == false){
 					mdr_I_one_dpDisk_fail_bool_v = true;
 					mdr_I_one_dpDisk_fail_stripeIndex = 
-						mdr_I_repair_dpDisk_stripeIndexs(disk_id, NCFS_DATA->data_disk_num);
+						mdr_I_repair_dpDisk_stripeIndexs(
+							disk_id, NCFS_DATA->data_disk_num);
 				}
 
 				//find the block indexs which must be repaired by the stripes in the buf
@@ -746,17 +904,21 @@ int Coding4Mdr1::mdr_I_recover_oneStripeGroup(int disk_id, char *buf, long long 
 					mdr_I_one_dpDisk_fail_bool_m = true;
 
 					mdr_I_one_dpDisk_fail_nonStripeIndex = 
-							mdr_I_repair_dpDisk_nonstripeIndexs_blocks_no(disk_id, 
-						 							mdr_I_one_dpDisk_fail_stripeIndex);
+						mdr_I_repair_dpDisk_nonstripeIndexs_blocks_no(disk_id, 
+						 	mdr_I_one_dpDisk_fail_stripeIndex);
 				}				
 
 				//read the essencial stripes into the pread_stripes
 				int s_size = mdr_I_one_dpDisk_fail_stripeIndex.size();
 				for(int i = 0; i < s_size; i++){
-					int blk_num = strip_num*strip_size + mdr_I_one_dpDisk_fail_stripeIndex[i];
+					int blk_num = strip_num*strip_size
+					 + mdr_I_one_dpDisk_fail_stripeIndex[i];
 					for(int j = 0; j < disk_total_num; j++){
 						if(j != disk_id){
-							retstat = cacheLayer->readDisk(j, pread_stripes[i][j], block_size, blk_num*block_size);
+							retstat = cacheLayer->readDisk(
+								j, pread_stripes[i][j], 
+								block_size, 
+								blk_num*block_size);
 
 							  // FILE * pFile;
 							  // char filename[50];
@@ -774,8 +936,11 @@ int Coding4Mdr1::mdr_I_recover_oneStripeGroup(int disk_id, char *buf, long long 
 				for(int i = 0; i < s_size; i++){
 					for(int j = 0; j < disk_total_num -1; j++){
 						if(j != disk_id){
-							for(long long j2 = 0; j2 < block_size; j2++){
-								pread_stripes[i][disk_id][j2] ^= pread_stripes[i][j][j2];
+							for(long long j2 = 0; 
+								j2 < block_size; 
+								j2++){
+								pread_stripes[i][disk_id][j2] ^=
+								 pread_stripes[i][j][j2];
 							}
 						}
 					}
@@ -794,8 +959,11 @@ int Coding4Mdr1::mdr_I_recover_oneStripeGroup(int disk_id, char *buf, long long 
 					// }
 					
 					//strcpy(buf+(buf_offset*block_size), pread_stripes[i][disk_id]);
-					for(long long j2 = 0; j2 < block_size; j2++){
-						*(buf+(buf_offset*block_size+j2)) = pread_stripes[i][disk_id][j2];
+					for(long long j2 = 0; 
+						j2 < block_size; 
+						j2++){
+						*(buf+(buf_offset*block_size+j2)) =
+						 pread_stripes[i][disk_id][j2];
 					}
 
 					// if(i == 0){
@@ -817,8 +985,10 @@ int Coding4Mdr1::mdr_I_recover_oneStripeGroup(int disk_id, char *buf, long long 
 					);
 
 				for(int i = 0; i < strip_size; i++){
-					if(stripeIndexs_set.find(i) == stripeIndexs_set.end()){
-						vector<vector<int> > iivec = mdr_I_one_dpDisk_fail_nonStripeIndex[i];
+					if(stripeIndexs_set.find(i) ==
+					 stripeIndexs_set.end()){
+						vector<vector<int> > iivec =
+						 mdr_I_one_dpDisk_fail_nonStripeIndex[i];
 						
 						int iivec_size = iivec.size();
 						if(iivec_size != NCFS_DATA->disk_total_num){
@@ -835,8 +1005,10 @@ int Coding4Mdr1::mdr_I_recover_oneStripeGroup(int disk_id, char *buf, long long 
 							if(!iivec[j].empty()){
 								int ivec_size = iivec[j].size();
 								for(int i2 = 0; i2 < ivec_size; i2++){
-									int par_disk_blk = mdr_I_repair_chg_blkIndexOffset_in_buf(parcitipant_disk_id,
-																iivec[j][i2], mdr_I_one_dpDisk_fail_stripeIndex);
+									int par_disk_blk = 
+									mdr_I_repair_chg_blkIndexOffset_in_buf(
+										parcitipant_disk_id,iivec[j][i2],
+										 mdr_I_one_dpDisk_fail_stripeIndex);
 									if(par_disk_blk == -1){
 										cout<<"parcitipant_disk_id = "<<parcitipant_disk_id<<endl;
 										printf("iivec[%d][%d] = %d\n", j, i2, iivec[j][i2]);
@@ -901,9 +1073,11 @@ int Coding4Mdr1::recover(int failed_disk_id,char* newdevice)
 		
 		int offset = i * block_size;
 
-		int retstat = fileSystemLayer->codingLayer->decode(failed_disk_id,buf,block_size,offset);
+		int retstat = fileSystemLayer->codingLayer->decode(
+			failed_disk_id,buf,block_size,offset);
 
-		retstat = cacheLayer->writeDisk(failed_disk_id,buf,block_size,offset);
+		retstat = cacheLayer->writeDisk(
+			failed_disk_id,buf,block_size,offset);
 
 	}
 
@@ -911,29 +1085,46 @@ int Coding4Mdr1::recover(int failed_disk_id,char* newdevice)
 	
 }
 
-int Coding4Mdr1::recover_enable_node_encode(int failed_disk_id, char* newdevice, int* node_socketid_array)
+int Coding4Mdr1::
+recover_enable_node_encode(
+	int failed_disk_id, 
+	char* newdevice, 
+	int* node_socketid_array)
 {
-  
-  return 0;
+	return 0;
 }
 
-int Coding4Mdr1::recover_using_multi_threads_nor(int failed_disk_id, char* newdevice, int total_sor_threads){
-  
+int Coding4Mdr1::
+recover_using_multi_threads_nor(
+	int failed_disk_id, 
+	char* newdevice, 
+	int total_sor_threads)
+{  
     return 0;
 }
 
-int Coding4Mdr1::recover_using_multi_threads_sor(int failed_disk_id, char* newdevice
-									, int total_sor_threads, int number_sor_thread){
-  
+int Coding4Mdr1::
+recover_using_multi_threads_sor(
+	int failed_disk_id, 
+	char* newdevice,
+	int total_sor_threads, 
+	int number_sor_thread)
+{
     return 0;
 }
 
-int Coding4Mdr1::recover_using_access_aggregation(int failed_disk_id, char* newdevice){
-  
+int Coding4Mdr1::
+recover_using_access_aggregation(
+	int failed_disk_id, 
+	char* newdevice)
+{
     return 0;
 }
 
-int Coding4Mdr1::recover_conventional(int failed_disk_id, char* newdevice){
-  
+int Coding4Mdr1::
+recover_conventional(
+	int failed_disk_id, 
+	char* newdevice)
+{  
    return 0;
 }

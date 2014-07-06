@@ -159,7 +159,7 @@ struct data_block_info Coding4Raid6::encode(const char* buf, int size)
         int parity_disk_id, code_disk_id;
         char *buf2, *buf3, *buf_read;
         char temp_char;
-	int data_disk_coeff;
+        int data_disk_coeff;
 
         struct timeval t1, t2, t3;
         double duration;
@@ -178,8 +178,8 @@ struct data_block_info Coding4Raid6::encode(const char* buf, int size)
 
         //implement disk write algorithm here.
         //here use raid6: stripped block allocation plus distributed parity and distributed RS code.
-
-	printf("You get in, the size is %d!\n",size);
+        
+        printf("You get in, the size is %d!\n",size);
 	
         for (i=0; i < disk_total_num; i++){
                 //mark blocks of code_disk and parity_disk
@@ -237,14 +237,14 @@ struct data_block_info Coding4Raid6::encode(const char* buf, int size)
 
                 // Cache Start
                 retstat = cacheLayer->writeDisk(disk_id,buf,size,block_no*block_size);
-		// Cache End
+		        // Cache End
 
                 if (NCFS_DATA->run_experiment == 1){
                         gettimeofday(&t2,NULL);
 
-                        //duration = (t2.tv_sec - t1.tv_sec) + 
-                        //        (t2.tv_usec-t1.tv_usec)/1000000.0;
-                        //NCFS_DATA->diskwrite_time += duration;
+                duration = (t2.tv_sec - t1.tv_sec) + 
+                        (t2.tv_usec-t1.tv_usec)/1000000.0;
+                        NCFS_DATA->diskwrite_time += duration;
                 }
 
                 code_disk_id = disk_total_num -1 - (block_no % disk_total_num);
@@ -257,21 +257,20 @@ struct data_block_info Coding4Raid6::encode(const char* buf, int size)
 
 				if (NCFS_DATA->run_experiment == 1){
                         		gettimeofday(&t1,NULL);
-                		}
+                }
 
-                                //Cache Start
-                                retstat = cacheLayer->readDisk(i,buf_read,
-                                                        size_request,block_no*block_size);
-                                //Cache End
+                //Cache Start
+                retstat = cacheLayer->readDisk(i,buf_read,size_request,block_no*block_size);
+                //Cache End
 
 				//printf("check point 2.2\n");
 				if (NCFS_DATA->run_experiment == 1){
-                                        gettimeofday(&t2,NULL);
-                                }
+                    gettimeofday(&t2,NULL);
+                }
 
-                                for (j=0; j < size_request; j++){
+                for (j=0; j < size_request; j++){
                                         //Calculate parity block P
-                                        buf2[j] = buf2[j] ^ buf_read[j];
+                                    buf2[j] = buf2[j] ^ buf_read[j];
 
                                 	//calculate the coefficient of the data block
                                 	data_disk_coeff = i;
@@ -302,9 +301,9 @@ struct data_block_info Coding4Raid6::encode(const char* buf, int size)
                                 if (NCFS_DATA->run_experiment == 1){
                                         gettimeofday(&t3,NULL);
 
-                        		//duration = (t2.tv_sec - t1.tv_sec) + 
-                                	//	(t2.tv_usec-t1.tv_usec)/1000000.0;
-                        		//NCFS_DATA->diskread_time += duration;
+                        		duration = (t2.tv_sec - t1.tv_sec) + 
+                                	(t2.tv_usec-t1.tv_usec)/1000000.0;
+                        		NCFS_DATA->diskread_time += duration;
 
                         		duration = (t3.tv_sec - t2.tv_sec) + 
                                 		(t3.tv_usec-t2.tv_usec)/1000000.0;
@@ -327,9 +326,9 @@ struct data_block_info Coding4Raid6::encode(const char* buf, int size)
                 if (NCFS_DATA->run_experiment == 1){
                         gettimeofday(&t2,NULL);
 
-                        //duration = (t2.tv_sec - t1.tv_sec) + 
-                        //        (t2.tv_usec-t1.tv_usec)/1000000.0;
-                        //NCFS_DATA->diskwrite_time += duration;
+                        duration = (t2.tv_sec - t1.tv_sec) + 
+                                (t2.tv_usec-t1.tv_usec)/1000000.0;
+                        NCFS_DATA->diskwrite_time += duration;
                 }
 
                 free(buf_read);
@@ -376,7 +375,7 @@ int Coding4Raid6::decode(int disk_id, char* buf, long long size, long long offse
 
         int g1, g2, g12;
         char* P_temp;
-	char* Q_temp;
+    	char* Q_temp;
 
         struct timeval t1, t2, t3;
         double duration;
@@ -414,9 +413,9 @@ int Coding4Raid6::decode(int disk_id, char* buf, long long size, long long offse
                 if (NCFS_DATA->run_experiment == 1){
                         gettimeofday(&t2,NULL);
 
-                        //duration = (t2.tv_sec - t1.tv_sec) + 
-                        //        (t2.tv_usec-t1.tv_usec)/1000000.0;
-                        //NCFS_DATA->diskread_time += duration;
+                        duration = (t2.tv_sec - t1.tv_sec) + 
+                                (t2.tv_usec-t1.tv_usec)/1000000.0;
+                        NCFS_DATA->diskread_time += duration;
                 }
 
 		free(temp_buf);
@@ -466,9 +465,9 @@ int Coding4Raid6::decode(int disk_id, char* buf, long long size, long long offse
                                 	if (NCFS_DATA->run_experiment == 1){
                                         	gettimeofday(&t3,NULL);
 
-                                        	//duration = (t2.tv_sec - t1.tv_sec) + 
-                                                //	(t2.tv_usec-t1.tv_usec)/1000000.0;
-                                        	//NCFS_DATA->diskread_time += duration;
+                                        	duration = (t2.tv_sec - t1.tv_sec) + 
+                                                	(t2.tv_usec-t1.tv_usec)/1000000.0;
+                                        	NCFS_DATA->diskread_time += duration;
 
                                         	duration = (t3.tv_sec - t2.tv_sec) + 
                                                 	(t3.tv_usec-t2.tv_usec)/1000000.0;
@@ -519,9 +518,9 @@ int Coding4Raid6::decode(int disk_id, char* buf, long long size, long long offse
                                         if (NCFS_DATA->run_experiment == 1){
                                                 gettimeofday(&t3,NULL);
 
-                                                //duration = (t2.tv_sec - t1.tv_sec) + 
-                                                //        (t2.tv_usec-t1.tv_usec)/1000000.0;
-                                                //NCFS_DATA->diskread_time += duration;
+                                                duration = (t2.tv_sec - t1.tv_sec) + 
+                                                        (t2.tv_usec-t1.tv_usec)/1000000.0;
+                                                NCFS_DATA->diskread_time += duration;
 
                                                 duration = (t3.tv_sec - t2.tv_sec) + 
                                                         (t3.tv_usec-t2.tv_usec)/1000000.0;
@@ -572,9 +571,9 @@ int Coding4Raid6::decode(int disk_id, char* buf, long long size, long long offse
                                                 if (NCFS_DATA->run_experiment == 1){
                                                         gettimeofday(&t3,NULL);
 
-                                                	//duration = (t2.tv_sec - t1.tv_sec) + 
-                                                        //	(t2.tv_usec-t1.tv_usec)/1000000.0;
-                                                	//NCFS_DATA->diskread_time += duration;
+                                                	duration = (t2.tv_sec - t1.tv_sec) + 
+                                                        	(t2.tv_usec-t1.tv_usec)/1000000.0;
+                                                	NCFS_DATA->diskread_time += duration;
 
                                                 	duration = (t3.tv_sec - t2.tv_sec) + 
                                                         	(t3.tv_usec-t2.tv_usec)/1000000.0;
@@ -621,9 +620,9 @@ int Coding4Raid6::decode(int disk_id, char* buf, long long size, long long offse
 				if (NCFS_DATA->run_experiment == 1){
                                         gettimeofday(&t3,NULL);
 
-                                        //duration = (t2.tv_sec - t1.tv_sec) + 
-                                        //	(t2.tv_usec-t1.tv_usec)/1000000.0;
-                                        //NCFS_DATA->diskread_time += duration;
+                                        duration = (t2.tv_sec - t1.tv_sec) + 
+                                        	(t2.tv_usec-t1.tv_usec)/1000000.0;
+                                        NCFS_DATA->diskread_time += duration;
 
                                         duration = (t3.tv_sec - t2.tv_sec) + 
                                         	(t3.tv_usec-t2.tv_usec)/1000000.0;
@@ -655,9 +654,9 @@ int Coding4Raid6::decode(int disk_id, char* buf, long long size, long long offse
                                                 if (NCFS_DATA->run_experiment == 1){
                                                         gettimeofday(&t3,NULL);
 
-                                                        //duration = (t2.tv_sec - t1.tv_sec) + 
-                                                        //        (t2.tv_usec-t1.tv_usec)/1000000.0;
-                                                        //NCFS_DATA->diskread_time += duration;
+                                                        duration = (t2.tv_sec - t1.tv_sec) + 
+                                                                (t2.tv_usec-t1.tv_usec)/1000000.0;
+                                                        NCFS_DATA->diskread_time += duration;
 
                                                         duration = (t3.tv_sec - t2.tv_sec) + 
                                                                 (t3.tv_usec-t2.tv_usec)/1000000.0;
@@ -694,9 +693,9 @@ int Coding4Raid6::decode(int disk_id, char* buf, long long size, long long offse
                                                 if (NCFS_DATA->run_experiment == 1){
                                                         gettimeofday(&t3,NULL);
 
-                                                        //duration = (t2.tv_sec - t1.tv_sec) +
-                                                        //        (t2.tv_usec-t1.tv_usec)/1000000.0;
-                                                        //NCFS_DATA->diskread_time += duration;
+                                                        duration = (t2.tv_sec - t1.tv_sec) +
+                                                                (t2.tv_usec-t1.tv_usec)/1000000.0;
+                                                        NCFS_DATA->diskread_time += duration;
 
                                                         duration = (t3.tv_sec - t2.tv_sec) +
                                                                 (t3.tv_usec-t2.tv_usec)/1000000.0;
@@ -720,9 +719,9 @@ int Coding4Raid6::decode(int disk_id, char* buf, long long size, long long offse
                                                 	if (NCFS_DATA->run_experiment == 1){
                                                         	gettimeofday(&t2,NULL);
 
-                                                        	//duration = (t2.tv_sec - t1.tv_sec) + 
-                                                                //	(t2.tv_usec-t1.tv_usec)/1000000.0;
-                                                        	//NCFS_DATA->diskread_time += duration;
+                                                        	duration = (t2.tv_sec - t1.tv_sec) + 
+                                                                	(t2.tv_usec-t1.tv_usec)/1000000.0;
+                                                        	NCFS_DATA->diskread_time += duration;
                                                 	}
 						}
 						else{ //use the recovered D
@@ -756,9 +755,9 @@ int Coding4Raid6::decode(int disk_id, char* buf, long long size, long long offse
                                                 if (NCFS_DATA->run_experiment == 1){
                                                 	gettimeofday(&t2,NULL);
 
-                                                        //duration = (t2.tv_sec - t1.tv_sec) +
-                                                        //	(t2.tv_usec-t1.tv_usec)/1000000.0;
-                                                        //NCFS_DATA->diskread_time += duration;
+                                                        duration = (t2.tv_sec - t1.tv_sec) +
+                                                        	(t2.tv_usec-t1.tv_usec)/1000000.0;
+                                                        NCFS_DATA->diskread_time += duration;
                                                 }
                                 	}
                         	}
@@ -806,9 +805,9 @@ int Coding4Raid6::decode(int disk_id, char* buf, long long size, long long offse
                                                 if (NCFS_DATA->run_experiment == 1){
                                                         gettimeofday(&t3,NULL);
 
-                                                        //duration = (t2.tv_sec - t1.tv_sec) +
-                                                        //        (t2.tv_usec-t1.tv_usec)/1000000.0;
-                                                        //NCFS_DATA->diskread_time += duration;
+                                                        duration = (t2.tv_sec - t1.tv_sec) +
+                                                                (t2.tv_usec-t1.tv_usec)/1000000.0;
+                                                        NCFS_DATA->diskread_time += duration;
 
                                                         duration = (t3.tv_sec - t2.tv_sec) +
                                                                 (t3.tv_usec-t2.tv_usec)/1000000.0;
@@ -855,9 +854,9 @@ int Coding4Raid6::decode(int disk_id, char* buf, long long size, long long offse
                                 if (NCFS_DATA->run_experiment == 1){
                                         gettimeofday(&t3,NULL);
 
-                                        //duration = (t2.tv_sec - t1.tv_sec) +
-                                        //	(t2.tv_usec-t1.tv_usec)/1000000.0;
-                                        //NCFS_DATA->diskread_time += duration;
+                                        duration = (t2.tv_sec - t1.tv_sec) +
+                                        	(t2.tv_usec-t1.tv_usec)/1000000.0;
+                                        NCFS_DATA->diskread_time += duration;
 
                                         duration = (t3.tv_sec - t2.tv_sec) +
                                         	(t3.tv_usec-t2.tv_usec)/1000000.0;
@@ -934,9 +933,9 @@ int Coding4Raid6::decode(int disk_id, char* buf, long long size, long long offse
                                                 if (NCFS_DATA->run_experiment == 1){
                                                         gettimeofday(&t3,NULL);
 
-                                        		//duration = (t2.tv_sec - t1.tv_sec) +
-                                                	//	(t2.tv_usec-t1.tv_usec)/1000000.0;
-                                        		//NCFS_DATA->diskread_time += duration;
+                                        		duration = (t2.tv_sec - t1.tv_sec) +
+                                                		(t2.tv_usec-t1.tv_usec)/1000000.0;
+                                        		NCFS_DATA->diskread_time += duration;
 
                                         		duration = (t3.tv_sec - t2.tv_sec) +
                                                 		(t3.tv_usec-t2.tv_usec)/1000000.0;
@@ -963,9 +962,9 @@ int Coding4Raid6::decode(int disk_id, char* buf, long long size, long long offse
                                 if (NCFS_DATA->run_experiment == 1){
                                 	gettimeofday(&t3,NULL);
 
-                                        //duration = (t2.tv_sec - t1.tv_sec) +
-                                        //	(t2.tv_usec-t1.tv_usec)/1000000.0;
-                                        //NCFS_DATA->diskread_time += duration;
+                                        duration = (t2.tv_sec - t1.tv_sec) +
+                                        	(t2.tv_usec-t1.tv_usec)/1000000.0;
+                                        NCFS_DATA->diskread_time += duration;
 
                                         duration = (t3.tv_sec - t2.tv_sec) +
                                         	(t3.tv_usec-t2.tv_usec)/1000000.0;
@@ -1013,9 +1012,9 @@ int Coding4Raid6::decode(int disk_id, char* buf, long long size, long long offse
                                                 if (NCFS_DATA->run_experiment == 1){
                                                         gettimeofday(&t3,NULL);
 
-                                        		//duration = (t2.tv_sec - t1.tv_sec) +
-                                                	//	(t2.tv_usec-t1.tv_usec)/1000000.0;
-                                        		//NCFS_DATA->diskread_time += duration;
+                                        		duration = (t2.tv_sec - t1.tv_sec) +
+                                                		(t2.tv_usec-t1.tv_usec)/1000000.0;
+                                        		NCFS_DATA->diskread_time += duration;
 
                                         		duration = (t3.tv_sec - t2.tv_sec) +
                                                 		(t3.tv_usec-t2.tv_usec)/1000000.0;
@@ -1048,9 +1047,9 @@ int Coding4Raid6::decode(int disk_id, char* buf, long long size, long long offse
                                         if (NCFS_DATA->run_experiment == 1){
                                                 gettimeofday(&t3,NULL);
 
-                                                //duration = (t2.tv_sec - t1.tv_sec) +
-                                                //	(t2.tv_usec-t1.tv_usec)/1000000.0;
-                                                //NCFS_DATA->diskread_time += duration;
+                                                duration = (t2.tv_sec - t1.tv_sec) +
+                                                	(t2.tv_usec-t1.tv_usec)/1000000.0;
+                                                NCFS_DATA->diskread_time += duration;
 
                                                 duration = (t3.tv_sec - t2.tv_sec) +
                                                 	(t3.tv_usec-t2.tv_usec)/1000000.0;

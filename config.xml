@@ -20,7 +20,7 @@
 					<TotalSize>1048576</TotalSize>
 					<FreeOffset>0</FreeOffset>
 					<FreeSize>1048576</FreeSize>
-					<IPaddr>10.141.251.63</IPaddr>
+					<IPaddr>127.0.0.1</IPaddr>
 				</Disk1>
 				<Disk2>
 					<DevName>/dev/loop2</DevName>
