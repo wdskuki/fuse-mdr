@@ -1,3 +1,29 @@
++-----+
+|Files|
++-----+
+
+setup.sh:
+- Generate virtua disks(*.img) and mount them on loop devices(/dev/loop*)
+- Usage: bash setup.sh (number of disks) (size of one disk MB)
+
+raid_health:
+- Record all disk condition(0: good; 1: failed)
+- NOT USEFUL
+
+raid_metadata:
+- Get filesystem's information(e.g, disk free offset and size) when START filesystem.
+- Record filessytem's information when filesystem shutdown.
+
+raid_setting:
+- Record raid information(e.g. total disks, block_size, raid_type, each raid information,...)
+- 
+
+
+
+
+
+
+
 
 +----------+
 |How to use|
