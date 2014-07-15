@@ -60,3 +60,47 @@ set 0 1
 diff file01.img file07.img
 
 
++------------------------------------------+
+|About distributed file system and GUI tool|
++------------------------------------------+
+datanode1(disk0-disk2)
+datanode2(disk3-disk5)
+server(run ncfs and gui tool)
+
+
+1> SETUP DATANODE
+	(on datanode1)
+	1.1> dd if=/dev/zero of=vblade1 bs=1M count=10
+	1.2> dd if=/dev/zero of=vblade2 bs=1M count=10 
+	1.3> dd if=/dev/zero of=vblade3 bs=1M count=10
+	1.4> vbladed 4 1 eth0 vblade1
+	1.5> vablded 4 2 eth0 vblade2
+	1.6> vbladed 4 3 eth0 vblade3
+	(on datanode2)
+	1.7> dd if=/dev/zero of=vblade4 bs=1M count=10
+	1.8> dd if=/dev/zero of=vblade5 bs=1M count=10 
+	1.9> dd if=/dev/zero of=vblade6 bs=1M count=10
+	1.10>vbladed 4 4 eth0 vblade4
+	1.11>vablded 4 5 eth0 vblade5
+	1.12>vbladed 4 6 eth0 vblade6
+
+(on server)	
+2> NETWORKED STORAGE DEVICE DISCOVERY ON SERVER
+	2.1> modprobe aoe
+	2.2> aoe-interfaces eth0
+	2.3> aoe-discover
+	2.4> aoe-stat
+	(then you can find new storage device e4.1-e4.6)
+	
+3> CONFIG SERVER SETTINGS AND RUN SERVER
+	3.1> SETUP 'config.xml'
+	     attention: 1> storage device are all like /dev/etherd/e*.*(for example, /dev/etherd/e4.1)
+	    	        2> ensure if ip address is correct
+	    	        3> set nogui = 0 if you need use gui tool
+	3.2> /ncfs -d rootdir/ mountdir/
+	
+4> RUN GUI TOOL
+	4.1> java -jar path_to_FYP_SVN.jar(must in ncfs home dir)
+	4.2> enter server ip address(no need to change username or password)
+	4.3> now you can use gui tool to manage ncfs
+	attention: found bugs in gui_java, have fixed.

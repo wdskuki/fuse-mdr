@@ -56,7 +56,7 @@ public class Setup_Details extends javax.swing.JPanel {
         strLine = global_param_str(br.readLine(), "disk_total_num");
         no_of_disk = Integer.parseInt(strLine);
 
-        String strLine2 = global_param_str(br.readLine(), "data_disk_num");
+        //String strLine2 = global_param_str(br.readLine(), "data_disk_num");
         // TODO Handle the data_disk_num
 
         dev_name = new String[no_of_disk];
