@@ -152,194 +152,194 @@ int Coding4Raid6::gf_get_coefficient(int value, int s)
 struct data_block_info Coding4Raid6::encode(const char* buf, int size)
 {
 
-        int retstat, disk_id, block_no, disk_total_num, block_size;
-        int size_request, block_request, free_offset;
-        struct data_block_info block_written;
-        int i, j;
-        int parity_disk_id, code_disk_id;
-        char *buf2, *buf3, *buf_read;
-        char temp_char;
-        int data_disk_coeff;
+	int retstat, disk_id, block_no, disk_total_num, block_size;
+	int size_request, block_request, free_offset;
+	struct data_block_info block_written;
+	int i, j;
+	int parity_disk_id, code_disk_id;
+	char *buf2, *buf3, *buf_read;
+	char temp_char;
+	int data_disk_coeff;
 
-        struct timeval t1, t2, t3;
-        double duration;
+	struct timeval t1, t2, t3;
+	double duration;
 
-        //test print
-        //printf("***get_data_block_no 1: size=%d\n",size);
+	//test print
+	//printf("***get_data_block_no 1: size=%d\n",size);
 
-        disk_total_num = NCFS_DATA->disk_total_num;
-        block_size = NCFS_DATA->disk_block_size;
+	disk_total_num = NCFS_DATA->disk_total_num;
+	block_size = NCFS_DATA->disk_block_size;
 
-        size_request = fileSystemLayer->round_to_block_size(size);
-        block_request = size_request / block_size;
+	size_request = fileSystemLayer->round_to_block_size(size);
+	block_request = size_request / block_size;
 
-        //test print
-        //printf("***get_data_block_no 2: size_request=%d, block_request=%d\n", size_request, block_request);
+	//test print
+	//printf("***get_data_block_no 2: size_request=%d, block_request=%d\n", size_request, block_request);
 
-        //implement disk write algorithm here.
-        //here use raid6: stripped block allocation plus distributed parity and distributed RS code.
-        
-        printf("You get in, the size is %d!\n",size);
-	
-        for (i=0; i < disk_total_num; i++){
-                //mark blocks of code_disk and parity_disk
-                if ((i == (disk_total_num-1-(NCFS_DATA->free_offset[i] % disk_total_num)))
-                || (i == (disk_total_num-1-((NCFS_DATA->free_offset[i]+1) % disk_total_num))))
-                {
-                        (NCFS_DATA->free_offset[i])++;
-                        (NCFS_DATA->free_size[i])--;
-                }
-        }
+	//implement disk write algorithm here.
+	//here use raid6: stripped block allocation plus distributed parity and distributed RS code.
 
+	printf("You get in, the size is %d!\n",size);
 
-        block_no = 0;
-        disk_id = -1;
-        free_offset = NCFS_DATA->free_offset[0];
-        for (i=disk_total_num-1; i >= 0; i--){
-//        for (i=disk_total_num-3; i>=0; i--){
-                if ((block_request <= (NCFS_DATA->free_size[i]))
-                                && (free_offset >= (NCFS_DATA->free_offset[i])))
-                {
-                        disk_id = i;
-                        block_no = NCFS_DATA->free_offset[i];
-                        free_offset = block_no;
-                }
-        }
+	for (i=0; i < disk_total_num; i++){
+		//mark blocks of code_disk and parity_disk
+		if ((i == (disk_total_num-1-(NCFS_DATA->free_offset[i] % disk_total_num)))
+				|| (i == (disk_total_num-1-((NCFS_DATA->free_offset[i]+1) % disk_total_num))))
+		{
+			(NCFS_DATA->free_offset[i])++;
+			(NCFS_DATA->free_size[i])--;
+		}
+	}
 
 
-        //get block from space_list if no free block available
-        if (disk_id == -1){
-                if (NCFS_DATA->space_list_head != NULL){
-                        disk_id = NCFS_DATA->space_list_head->disk_id;
-                        block_no = NCFS_DATA->space_list_head->disk_block_no;
-                        fileSystemLayer->space_list_remove(disk_id,block_no);
-                }
-        }
+	block_no = 0;
+	disk_id = -1;
+	free_offset = NCFS_DATA->free_offset[0];
+	for (i=disk_total_num-1; i >= 0; i--){
+		//        for (i=disk_total_num-3; i>=0; i--){
+		if ((block_request <= (NCFS_DATA->free_size[i]))
+				&& (free_offset >= (NCFS_DATA->free_offset[i])))
+		{
+			disk_id = i;
+			block_no = NCFS_DATA->free_offset[i];
+			free_offset = block_no;
+		}
+	}
 
 
-        if (disk_id == -1){
-                printf("***get_data_block_no: ERROR disk_id = -1\n");
-        }
-        else{
-                buf_read = (char*)malloc(sizeof(char)*size_request);
-                buf2 = (char*)malloc(sizeof(char)*size_request);
-                memset(buf2, 0, size_request);
-                buf3 = (char*)malloc(sizeof(char)*size_request);
-                memset(buf3, 0, size_request);
+	//get block from space_list if no free block available
+	if (disk_id == -1){
+		if (NCFS_DATA->space_list_head != NULL){
+			disk_id = NCFS_DATA->space_list_head->disk_id;
+			block_no = NCFS_DATA->space_list_head->disk_block_no;
+			fileSystemLayer->space_list_remove(disk_id,block_no);
+		}
+	}
 
-                NCFS_DATA->free_offset[disk_id] = block_no + block_request;
-                NCFS_DATA->free_size[disk_id]
-                        = NCFS_DATA->free_size[disk_id] - block_request;
 
-                if (NCFS_DATA->run_experiment == 1){
-                        gettimeofday(&t1,NULL);
-                }
+	if (disk_id == -1){
+		printf("***get_data_block_no: ERROR disk_id = -1\n");
+	}
+	else{
+		buf_read = (char*)malloc(sizeof(char)*size_request);
+		buf2 = (char*)malloc(sizeof(char)*size_request);
+		memset(buf2, 0, size_request);
+		buf3 = (char*)malloc(sizeof(char)*size_request);
+		memset(buf3, 0, size_request);
 
-                // Cache Start
-                retstat = cacheLayer->writeDisk(disk_id,buf,size,block_no*block_size);
-		        // Cache End
+		NCFS_DATA->free_offset[disk_id] = block_no + block_request;
+		NCFS_DATA->free_size[disk_id]
+			= NCFS_DATA->free_size[disk_id] - block_request;
 
-                if (NCFS_DATA->run_experiment == 1){
-                        gettimeofday(&t2,NULL);
+		if (NCFS_DATA->run_experiment == 1){
+			gettimeofday(&t1,NULL);
+		}
 
-                duration = (t2.tv_sec - t1.tv_sec) + 
-                        (t2.tv_usec-t1.tv_usec)/1000000.0;
-                        NCFS_DATA->diskwrite_time += duration;
-                }
+		// Cache Start
+		retstat = cacheLayer->writeDisk(disk_id,buf,size,block_no*block_size);
+		// Cache End
 
-                code_disk_id = disk_total_num -1 - (block_no % disk_total_num);
-                parity_disk_id = disk_total_num - 1 - ((block_no+1) % disk_total_num);
-                //code_disk_id = disk_total_num - 1;
-                //parity_disk_id = disk_total_num - 2;
+		if (NCFS_DATA->run_experiment == 1){
+			gettimeofday(&t2,NULL);
 
-                for (i=0; i < disk_total_num; i++){
-                        if ((i != parity_disk_id) && (i != code_disk_id)){
+			duration = (t2.tv_sec - t1.tv_sec) + 
+				(t2.tv_usec-t1.tv_usec)/1000000.0;
+			NCFS_DATA->diskwrite_time += duration;
+		}
+
+		code_disk_id = disk_total_num -1 - (block_no % disk_total_num);
+		parity_disk_id = disk_total_num - 1 - ((block_no+1) % disk_total_num);
+		//code_disk_id = disk_total_num - 1;
+		//parity_disk_id = disk_total_num - 2;
+
+		for (i=0; i < disk_total_num; i++){
+			if ((i != parity_disk_id) && (i != code_disk_id)){
 
 				if (NCFS_DATA->run_experiment == 1){
-                        		gettimeofday(&t1,NULL);
-                }
+					gettimeofday(&t1,NULL);
+				}
 
-                //Cache Start
-                retstat = cacheLayer->readDisk(i,buf_read,size_request,block_no*block_size);
-                //Cache End
+				//Cache Start
+				retstat = cacheLayer->readDisk(i,buf_read,size_request,block_no*block_size);
+				//Cache End
 
 				//printf("check point 2.2\n");
 				if (NCFS_DATA->run_experiment == 1){
-                    gettimeofday(&t2,NULL);
-                }
+					gettimeofday(&t2,NULL);
+				}
 
-                for (j=0; j < size_request; j++){
-                                        //Calculate parity block P
-                                    buf2[j] = buf2[j] ^ buf_read[j];
+				for (j=0; j < size_request; j++){
+					//Calculate parity block P
+					buf2[j] = buf2[j] ^ buf_read[j];
 
-                                	//calculate the coefficient of the data block
-                                	data_disk_coeff = i;
+					//calculate the coefficient of the data block
+					data_disk_coeff = i;
 
-                                	if (i > code_disk_id){
-                                        	(data_disk_coeff)--;
-                                	}
-                                	if (i > parity_disk_id){
-                                        	(data_disk_coeff)--;
-                                	}
-                                	data_disk_coeff = disk_total_num - 3 - data_disk_coeff;
-					
+					if (i > code_disk_id){
+						(data_disk_coeff)--;
+					}
+					if (i > parity_disk_id){
+						(data_disk_coeff)--;
+					}
+					data_disk_coeff = disk_total_num - 3 - data_disk_coeff;
+
 					//printf("check point 2.2.1\n");
-                                	data_disk_coeff = gf_get_coefficient(data_disk_coeff, field_power);
+					data_disk_coeff = gf_get_coefficient(data_disk_coeff, field_power);
 					//printf("check point 2.2.2\n");
-					
-                                	//calculate code block Q
-                                	temp_char = buf3[j];
-					
+
+					//calculate code block Q
+					temp_char = buf3[j];
+
 					//printf("check point 2.2.3\n");
 					//printf("%d,%d,%d\n",(unsigned char)buf_read[j],data_disk_coeff,field_power);
-                                	buf3[j] = temp_char ^
-                                        (char)gf_mul((unsigned char)buf_read[j],data_disk_coeff,field_power);
-					
+					buf3[j] = temp_char ^
+						(char)gf_mul((unsigned char)buf_read[j],data_disk_coeff,field_power);
+
 					//printf("check point 2.2.4\n");
-                                }
+				}
 
-                                if (NCFS_DATA->run_experiment == 1){
-                                        gettimeofday(&t3,NULL);
+				if (NCFS_DATA->run_experiment == 1){
+					gettimeofday(&t3,NULL);
 
-                        		duration = (t2.tv_sec - t1.tv_sec) + 
-                                	(t2.tv_usec-t1.tv_usec)/1000000.0;
-                        		NCFS_DATA->diskread_time += duration;
+					duration = (t2.tv_sec - t1.tv_sec) + 
+						(t2.tv_usec-t1.tv_usec)/1000000.0;
+					NCFS_DATA->diskread_time += duration;
 
-                        		duration = (t3.tv_sec - t2.tv_sec) + 
-                                		(t3.tv_usec-t2.tv_usec)/1000000.0;
-                        		NCFS_DATA->encoding_time += duration;
-                                }
-                        }
-                }
+					duration = (t3.tv_sec - t2.tv_sec) + 
+						(t3.tv_usec-t2.tv_usec)/1000000.0;
+					NCFS_DATA->encoding_time += duration;
+				}
+			}
+		}
 
 
-                if (NCFS_DATA->run_experiment == 1){
-                        gettimeofday(&t1,NULL);
-                }
+		if (NCFS_DATA->run_experiment == 1){
+			gettimeofday(&t1,NULL);
+		}
 
-                // Cache Start
-                retstat = cacheLayer->writeDisk(parity_disk_id,buf2,size,block_no*block_size);
-                retstat = cacheLayer->writeDisk(code_disk_id,buf3,size,block_no*block_size);
-                // Cache End
-                //printf("***raid6: retstat=%d\n",retstat);
+		// Cache Start
+		retstat = cacheLayer->writeDisk(parity_disk_id,buf2,size,block_no*block_size);
+		retstat = cacheLayer->writeDisk(code_disk_id,buf3,size,block_no*block_size);
+		// Cache End
+		//printf("***raid6: retstat=%d\n",retstat);
 
-                if (NCFS_DATA->run_experiment == 1){
-                        gettimeofday(&t2,NULL);
+		if (NCFS_DATA->run_experiment == 1){
+			gettimeofday(&t2,NULL);
 
-                        duration = (t2.tv_sec - t1.tv_sec) + 
-                                (t2.tv_usec-t1.tv_usec)/1000000.0;
-                        NCFS_DATA->diskwrite_time += duration;
-                }
+			duration = (t2.tv_sec - t1.tv_sec) + 
+				(t2.tv_usec-t1.tv_usec)/1000000.0;
+			NCFS_DATA->diskwrite_time += duration;
+		}
 
-                free(buf_read);
-                free(buf2);
-                free(buf3);
-        }
+		free(buf_read);
+		free(buf2);
+		free(buf3);
+	}
 
-        block_written.disk_id = disk_id;
-        block_written.block_no = block_no;
+	block_written.disk_id = disk_id;
+	block_written.block_no = block_no;
 
-        return block_written;  
+	return block_written;  
 }
 
 

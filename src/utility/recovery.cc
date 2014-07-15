@@ -40,7 +40,7 @@
 #include "../coding/coding_src_rs.hh"
 #include "../coding/coding_mbr.hh"
 #include "../coding/coding_mdr1.hh"
-
+#include "../coding/coding_raid6_noRotate.hh"
 
 struct ncfs_state* NCFS_DATA;
 FileSystemLayer* fileSystemLayer;
@@ -783,6 +783,7 @@ CodingLayer* initializeCodingLayer(){
 
 		//add by wds on Jun 30, 2014 begin
 		case 61: return new Coding4Mdr1(); break;
+		case 62: return new Coding4Raid6noRotate(); break;
 		//add by wds on Jun 30, 2014 end
 	}
 
