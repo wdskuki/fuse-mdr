@@ -106,4 +106,4 @@ server(run ncfs and gui tool)
 	4.1> java -jar path_to_FYP_SVN.jar(must in ncfs home dir)
 	4.2> enter server ip address(no need to change username or password)
 	4.3> now you can use gui tool to manage ncfs
-	attention: found bugs in gui_java, have fixed.
+	attention: found bugs in src/gui_java/src/FYP/Setup_Details.java and src/filesystem/filesystem_utils.cc, have fixed.
