@@ -609,9 +609,13 @@ void FileSystemLayer::update_settting(void){
 	FILE* file;
 	file = fopen("raid_setting","w");
 	fprintf(file,"disk_total_num=%d\n",NCFS_DATA->disk_total_num);
+	fprintf(file,"data_disk_num=%d\n",NCFS_DATA->data_disk_num);
 	fprintf(file,"disk_block_size=%d\n",NCFS_DATA->disk_block_size);
 	fprintf(file,"disk_raid_type=%d\n",NCFS_DATA->disk_raid_type);
 	fprintf(file,"space_list_num=0\n");
+	fprintf(file,"no_cache=%d\n",NCFS_DATA->no_cache);
+	fprintf(file,"no_gui=%d\n",NCFS_DATA->no_gui);
+	fprintf(file,"run_experiment=%d\n",NCFS_DATA->run_experiment);
 	for(int i = 0; i < NCFS_DATA->disk_total_num; ++i){
 		fprintf(file,"%d.dev_name=%s\n",i,NCFS_DATA->dev_name[i]);
 		fprintf(file,"%d.free_offset=0\n",i);
