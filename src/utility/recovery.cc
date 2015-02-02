@@ -618,55 +618,44 @@ int mdr_I_recover_one_disk(int fail_disk_id){
 
 	    //storageLayer->disk_fd[fail_disk_id] = open(NCFS_DATA->dev_name[fail_disk_id],O_RDWR);
 	    //storageLayer->DiskRenew(fail_disk_id);
+		char*** pread_stripes;
+		int r = strip_size;
+		pread_stripes = (char ***)malloc(sizeof(char** ) * r);
+		for(int i = 0; i < r; i++){
+			pread_stripes[i] = (char **)malloc(sizeof(char* )* disk_total_num);
+			for(int j = 0; j < disk_total_num; j++){
+				pread_stripes[i][j] = (char *)malloc(sizeof(char)* block_size);
+				//memset(pread_stripes[i][j], 0, block_size);
+			}
+		}
 
-		if((fail_disk_id >= 0) && (fail_disk_id < disk_total_num-1)){   
-		   	char*** pread_stripes;
-		   	int r = strip_size / 2;
-		    pread_stripes = (char ***)malloc(sizeof(char** ) * r);
-		    for(int i = 0; i < r; i++){
-		    	pread_stripes[i] = (char **)malloc(sizeof(char* )* disk_total_num);
-		    	for(int j = 0; j < disk_total_num; j++){
-		    		pread_stripes[i][j] = (char *)malloc(sizeof(char)* block_size);
-		    		//memset(pread_stripes[i][j], 0, block_size);
-		    	}
-		    }
-
-		    // int r = strip_size / 2;
-		    // char pread_stripes[r][disk_total_num][block_size];
+		// int r = strip_size / 2;
+		 // char pread_stripes[r][disk_total_num][block_size];
 			
-		    for(int i = 0; i < __recoversize; i += strip_size){
-			    for(int i = 0; i < r; i++){
-			    	for(int j = 0; j < disk_total_num; j++){
-			    		memset(pread_stripes[i][j], 0, block_size);
-			    	}
-			    }
-
-			    long long offset = i * block_size;
-
-			    long long buf_size = strip_size * block_size;
-			    char buf[buf_size];
-
-			    int retstat = coding_mdr1->mdr_I_recover_oneStripeGroup(fail_disk_id, 
-			    												buf, buf_size, offset, pread_stripes);
-			    retstat = cacheLayer->writeDisk(fail_disk_id,buf,strip_size*block_size,offset);
-		    }
-		    
+		for(int i = 0; i < __recoversize; i += strip_size){
 		    for(int i = 0; i < r; i++){
 		    	for(int j = 0; j < disk_total_num; j++){
-		    		free(pread_stripes[i][j]);
+		    		memset(pread_stripes[i][j], 0, block_size);
 		    	}
-		    	free(pread_stripes[i]);
 		    }
-		    free(pread_stripes);	    
-		}
-		else if(fail_disk_id == disk_total_num-1){
 
+		    long long offset = i * block_size;
 
-		}
-		else{
-			cout<<"ERROR: recovery!"<<endl;
-			exit(1);
-		}
+		    long long buf_size = strip_size * block_size;
+		    char buf[buf_size];
+
+		    int retstat = coding_mdr1->mdr_I_recover_oneStripeGroup(fail_disk_id, 
+		    												buf, buf_size, offset, pread_stripes);
+		    retstat = cacheLayer->writeDisk(fail_disk_id,buf,strip_size*block_size,offset);
+	    }
+		    
+	    for(int i = 0; i < r; i++){
+	    	for(int j = 0; j < disk_total_num; j++){
+	    		free(pread_stripes[i][j]);
+	    	}
+	    	free(pread_stripes[i]);
+	    }
+	    free(pread_stripes);	    
 
 	    //NCFS_DATA->disk_status[fail_disk_id] = 0;
 	    fileSystemLayer->set_device_status(fail_disk_id,0);

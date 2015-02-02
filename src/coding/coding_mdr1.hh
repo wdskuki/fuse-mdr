@@ -40,6 +40,7 @@ private:
 	void print_iivec(vector<vector<int> >& iivec);
 	void print_ivmap(map<int, vector<vector<int> > >& ivmap, vector<int>& stripeIndexs);
 	void mdr_print_matrix(long long* matrix, int row, int col);	
+	void print_qDisk_related_block_no(map<int, vector<vector<int> > > & ivvmap);
 
 public:
 	Coding4Mdr1();

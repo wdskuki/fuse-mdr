@@ -195,17 +195,18 @@ vector<int> Coding4Mdr1::mdr_I_find_q_blocks_id(
 }
 
 
-//为修复Q盘的各个块的先关链
+//为修复Q盘的各个块的xiangguan链
 vector<vector<int> > Coding4Mdr1::
 mdr_I_repair_qDisk_blocks_id(int block_no){
 	vector<vector<int> > iivec;
 	int row = strip_size;
 	int col = NCFS_DATA->data_disk_num+1;
-	for(int i = 0; i < col; i++){
+	for(int i = 0; i < col; i++){ //disk_id
 		vector<int> ivec;
-		for(int j = 0; j < strip_size; j++){
+		for(int j = 0; j < strip_size; j++){ //element
 			if((mdr_I_encoding_matrixB[block_no*col+i]&
 				(1<<(strip_size-j-1))) != 0){
+				//cout<<(1<<(strip_size-j-1))<<endl;
 				ivec.push_back(j);
 			}
 		}
@@ -214,6 +215,22 @@ mdr_I_repair_qDisk_blocks_id(int block_no){
 	return iivec;
 }
 
+void Coding4Mdr1::
+print_qDisk_related_block_no(map<int, vector<vector<int> > > & ivvmap){
+	for(int i = 0; i < strip_size; i++){
+		cout<<"Block: "<<i+1<<endl;
+		vector<vector<int> > ivvec = ivvmap[i];
+		for(int j = 0; j < ivvec.size(); j++){
+			if(!ivvec[j].empty()){
+				for(int t = 0; t < ivvec[j].size(); t++){
+					printf("<%d, %d>, ", j+1, ivvec[j][t]);
+				}
+			}
+		}
+		cout<<endl;
+	}
+	cout<<endl;
+}
 
 vector<int> Coding4Mdr1::
 mdr_I_repair_dpDisk_stripeIndexs_internal(
@@ -1042,35 +1059,51 @@ mdr_I_recover_oneStripeGroup(
 									for(long long j2 = 0; j2 < block_size; j2++){
 										des[j2] ^= src[j2];
 									}
-
 								}
 							}
 						}						
 					}
 				}				
 			}
-			else if(disk_id = disk_total_num - 1){//fail disk(disk_id) is Q disk
+			else if(disk_id == disk_total_num - 1){//fail disk(disk_id) is Q disk
 				//read essential blk into buffer
+
 				for(int i = 0; i < strip_size; i++){
 					for(int j = 0; j < disk_total_num-1; j++){
 						retstat = cacheLayer->readDisk(j, pread_stripes[i][j], 
 							block_size, (block_no + i)*block_size);
+					
+							// FILE * pFile;
+						 	// char filename[100];
+							// sprintf(filename, "./wds/pread_stripe_%d_%d_%d",strip_num, i, j);
+							// cout<<filename<<endl;
+							// pFile = fopen(filename, "wb");
+							// fwrite(pread_stripes[i][j], sizeof(char), 
+							// 						block_size, pFile);
+							// fclose(pFile);
+							// cout<<"---------"<<endl;
+						
 					}
 				}
-				if(mdr_I_one_qDisk_fail_bool == false){
+				//mdr_print_matrix(mdr_I_encoding_matrixB, strip_size, NCFS_DATA->data_disk_num+1);
+				if(mdr_I_one_qDisk_fail_bool == false)
+				{
 					mdr_I_one_qDisk_fail_bool = true;
-					for(int i = 0; i < strip_num; i++){
+					for(int i = 0; i < strip_size; i++){
 						mdr_I_one_qDisk_fail_stripeIndex[i] = mdr_I_repair_qDisk_blocks_id(i);
+						//print_iivec(mdr_I_one_qDisk_fail_stripeIndex[i]);
 					}
+					//print_qDisk_related_block_no(mdr_I_one_qDisk_fail_stripeIndex);
 				}
 				for(int i = 0; i < strip_size; i++){
 					vector< vector<int> > iivec = mdr_I_one_qDisk_fail_stripeIndex[i];
 					for(int j = 0; j < iivec.size(); j++){
-						if(!iivec.empty()){
+						if(!iivec[j].empty()){
 							for(int j2 = 0; j2 < iivec[j].size(); j2++){
+								int blk_off = iivec[j][j2];
 								for(long long j3 = 0; j3 < block_size; j3++){
 									pread_stripes[i][disk_total_num-1][j3] ^= 
-										pread_stripes[j2][j][j3];
+										pread_stripes[blk_off][j][j3];
 								}	
 							}
 						}
@@ -1080,7 +1113,7 @@ mdr_I_recover_oneStripeGroup(
 				for(int i = 0; i < strip_size; i++){
 					char *des = buf + i*block_size;
 					for(long long j3 = 0; j3 < block_size; j3++){
-						des[j3] ^= pread_stripes[i][disk_total_num-1][j3];
+						des[j3] = pread_stripes[i][disk_total_num-1][j3];
 					}
 				}
 			}
