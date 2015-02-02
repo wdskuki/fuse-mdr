@@ -43,7 +43,7 @@ default:
 	$(CC_JERASURE) $(CFLAGS_OBJ) -c $(dir_jerasure)/galois.c -o $(dir_jerasure)/galois.o
 
 	@echo "Compiling ncfs"
-	$(CC) -o ncfs $(objs) $(CFLAGS_NCFS)
+	$(CC) -o mdr $(objs) $(CFLAGS_NCFS)
 
 setup: $(dir_utility)/setup.c
 	$(CC) $(CFLAGS_UTIL) $(dir_utility)/setup.c -o setup
