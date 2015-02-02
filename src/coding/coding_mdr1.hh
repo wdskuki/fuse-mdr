@@ -11,28 +11,35 @@ class Coding4Mdr1 : public CodingLayer {
 private:
 	long long* mdr_I_encoding_matrixB;
 	int strip_size;
-	long long* mdr_I_iterative_construct_encoding_matrixB(
-		long long *matrix, int k);
+	bool mdr_I_one_dpDisk_fail_bool_m;
+	bool mdr_I_one_dpDisk_fail_bool_v;
+	bool mdr_I_one_qDisk_fail_bool;
+	map<int, vector<vector<int> > > mdr_I_one_dpDisk_fail_nonStripeIndex;
+	map<int, vector<vector<int> > > mdr_I_one_qDisk_fail_stripeIndex;
+	vector<int> mdr_I_one_dpDisk_fail_stripeIndex;
+	
+	long long* mdr_I_iterative_construct_encoding_matrixB(long long *matrix, int k);
 	long long* mdr_I_encoding_matrix(int k);
-	void mdr_print_matrix(long long* matrix, int row, int col);	
+	
 	vector<int> mdr_I_find_q_blocks_id(int disk_id, int block_no);
 	vector<vector<int> > mdr_I_repair_qDisk_blocks_id(int block_no);
+//	void mdr_I_repair_qDisk_stripeIndexs_blocks_no();
+
 	vector<int> mdr_I_repair_dpDisk_stripeIndexs_internal(int diskID, int val_k);
 	vector<int> mdr_I_repair_dpDisk_stripeIndexs(int diskID, int val_k);
 	bool mdr_I_repair_if_blk_in_buf(int disk_id, int stripe_blk_offset, bool ** isInbuf,
 									 vector<int>& mdr_I_one_dpDisk_fail_stripeIndex);
 	int mdr_I_repair_chg_blkIndexOffset_in_buf(int disk_id, 
 		int stripe_blk_offset, vector<int>& stripeIndexs);
-	bool mdr_I_one_dpDisk_fail_bool_m;
-	bool mdr_I_one_dpDisk_fail_bool_v;
-	map<int, vector<vector<int> > > mdr_I_one_dpDisk_fail_nonStripeIndex;
-	vector<int> mdr_I_one_dpDisk_fail_stripeIndex;
+
+
 	map<int, vector<vector<int> > > mdr_I_repair_dpDisk_nonstripeIndexs_blocks_no(
 		int fail_disk_id, vector<int>& stripeIndexs);
+
 	void print_ivec(vector<int>& ivec);
 	void print_iivec(vector<vector<int> >& iivec);
-	void print_ivmap(map<int, vector<vector<int> > >& ivmap, 
-		vector<int>& stripeIndexs);
+	void print_ivmap(map<int, vector<vector<int> > >& ivmap, vector<int>& stripeIndexs);
+	void mdr_print_matrix(long long* matrix, int row, int col);	
 
 public:
 	Coding4Mdr1();

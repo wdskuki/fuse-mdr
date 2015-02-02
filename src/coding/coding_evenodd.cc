@@ -1,22 +1,10 @@
-#include "coding_mdr1.hh"
+#include "coding_evenodd.hh"
 #include "../filesystem/filesystem_common.hh"
 #include "../filesystem/filesystem_utils.hh"
 #include "../cache/cache.hh"
 #include "../gui/diskusage_report.hh"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <fuse.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/time.h>
-#include <math.h>
 
-#include <iostream>
-#include <vector>
-#include <map>
-#include <set>
-using namespace std;
 
 //NCFS context state
 extern struct ncfs_state* NCFS_DATA;
@@ -168,8 +156,6 @@ long long* Coding4Mdr1::mdr_I_encoding_matrix(int k){
 	return mdr_encoding_matrix_B;
 }
 
-
-//这个函数主要作用是当一个数据块更新后，设计到Q盘的那些校验块更新
 vector<int> Coding4Mdr1::mdr_I_find_q_blocks_id(
 	int disk_id, int block_no)
 {
@@ -194,8 +180,6 @@ vector<int> Coding4Mdr1::mdr_I_find_q_blocks_id(
 	return ivec;
 }
 
-
-//为修复Q盘的各个块的先关链
 vector<vector<int> > Coding4Mdr1::
 mdr_I_repair_qDisk_blocks_id(int block_no){
 	vector<vector<int> > iivec;
@@ -269,8 +253,6 @@ mdr_I_repair_dpDisk_stripeIndexs_internal(
 	}
 }
 
-
-//获得基础盘的C和R集合
 vector<int> Coding4Mdr1::
 mdr_I_repair_dpDisk_stripeIndexs(int diskID, int val_k){
 	vector<int> ivec = 
@@ -284,7 +266,6 @@ mdr_I_repair_dpDisk_stripeIndexs(int diskID, int val_k){
 	return ivec2;
 }
 
-//检查是否在buffer中
 bool Coding4Mdr1::
 mdr_I_repair_if_blk_in_buf(int disk_id, int stripe_blk_offset, 
 	bool** isInbuf, vector<int>& stripeIndexs)
@@ -299,7 +280,6 @@ mdr_I_repair_if_blk_in_buf(int disk_id, int stripe_blk_offset,
 	return false;
 }
 
-//所需要的块在buf中的位置
 int Coding4Mdr1::
 mdr_I_repair_chg_blkIndexOffset_in_buf(int disk_id, 
 	int stripe_blk_offset, vector<int>& stripeIndexs){
@@ -314,7 +294,7 @@ mdr_I_repair_chg_blkIndexOffset_in_buf(int disk_id,
 	return -1;
 }
 
-//
+
 map<int, vector<vector<int> > > Coding4Mdr1::
 mdr_I_repair_dpDisk_nonstripeIndexs_blocks_no(
 	int fail_disk_id, vector<int>& stripeIndexs)
@@ -367,14 +347,6 @@ mdr_I_repair_dpDisk_nonstripeIndexs_blocks_no(
 	return ivmap;	
 }
 
-
-// void Coding4Mdr1 :: 
-// mdr_I_repair_qDisk_stripeIndexs_blocks_no(){
-// 	for(int i = 0; i < strip_num; i++){
-// 		mdr_I_one_qDisk_fail_stripeIndex[i] = mdr_I_repair_qDisk_blocks_id(i);
-// 	}
-// }
-
 /*
  * constructor for mdr1.
  */
@@ -385,7 +357,6 @@ Coding4Mdr1::Coding4Mdr1()
 	strip_size = (int)pow(2, NCFS_DATA->data_disk_num);
 	mdr_I_one_dpDisk_fail_bool_m = false;
 	mdr_I_one_dpDisk_fail_bool_v = false;
-	mdr_I_one_qDisk_fail_bool = false;
 }
 
 Coding4Mdr1 :: ~Coding4Mdr1(){
@@ -393,7 +364,7 @@ Coding4Mdr1 :: ~Coding4Mdr1(){
 }
 
 
-struct data_block_info Coding4Mdr1::
+struct data_block_info Coding4Evenodd::
 encode(const char *buf, int size)
 {
 	int retstat, disk_id, block_no, disk_total_num, block_size;
@@ -506,7 +477,6 @@ encode(const char *buf, int size)
 				(t2.tv_usec-t1.tv_usec)/1000000.0;
 			NCFS_DATA->diskread_time += duration;			
 		}
-
 
 		//calculate new P block
 		for (j = 0; j < size_request; j++) {
@@ -828,7 +798,8 @@ int Coding4Mdr1::decode(int disk_id, char *buf, long long size,
 			}
 			else if(disk_id = disk_total_num - 1){
 				//fail disk(disk_id) is Q disk
-				//TODO:	
+				//TODO:
+					
 			}
 		}
 		else{
@@ -1049,40 +1020,9 @@ mdr_I_recover_oneStripeGroup(
 					}
 				}				
 			}
-			else if(disk_id = disk_total_num - 1){//fail disk(disk_id) is Q disk
-				//read essential blk into buffer
-				for(int i = 0; i < strip_size; i++){
-					for(int j = 0; j < disk_total_num-1; j++){
-						retstat = cacheLayer->readDisk(j, pread_stripes[i][j], 
-							block_size, (block_no + i)*block_size);
-					}
-				}
-				if(mdr_I_one_qDisk_fail_bool == false){
-					mdr_I_one_qDisk_fail_bool = true;
-					for(int i = 0; i < strip_num; i++){
-						mdr_I_one_qDisk_fail_stripeIndex[i] = mdr_I_repair_qDisk_blocks_id(i);
-					}
-				}
-				for(int i = 0; i < strip_size; i++){
-					vector< vector<int> > iivec = mdr_I_one_qDisk_fail_stripeIndex[i];
-					for(int j = 0; j < iivec.size(); j++){
-						if(!iivec.empty()){
-							for(int j2 = 0; j2 < iivec[j].size(); j2++){
-								for(long long j3 = 0; j3 < block_size; j3++){
-									pread_stripes[i][disk_total_num-1][j3] ^= 
-										pread_stripes[j2][j][j3];
-								}	
-							}
-						}
-					}
-				}
-
-				for(int i = 0; i < strip_size; i++){
-					char *des = buf + i*block_size;
-					for(long long j3 = 0; j3 < block_size; j3++){
-						des[j3] ^= pread_stripes[i][disk_total_num-1][j3];
-					}
-				}
+			else if(disk_id = disk_total_num - 1){
+				//fail disk(disk_id) is Q disk
+				//TODO:	
 			}
 		}
 		else{
