@@ -74,7 +74,7 @@ remap: $(dir_utility)/remap.c
 
 benchmark: $(dir_utility)/benchmark.c
 	$(CC) $(CFLAG_UTIL) $(dir_utility)/benchmark.c -o benchmark
-
+.PHONY: clean
 clean:
 	@echo "Deleting ncfs"
 	rm -f ncfs *.o *~

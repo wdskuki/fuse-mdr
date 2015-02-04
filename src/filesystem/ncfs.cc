@@ -49,12 +49,12 @@ ncfs_destroy()
 #include "../coding/coding_mbr.hh"
 #include "../coding/coding_mdr1.hh"
 #include "../coding/coding_raid6_noRotate.hh"
+#include "../coding/coding_evenodd.hh"
 
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
-
 
 #include <fuse.h>
 #include <libgen.h>
@@ -1109,6 +1109,7 @@ CodingLayer* initializeCodingLayer()
 		// add by wds on Jun 30, 2014 begin
 		case 61: return new Coding4Mdr1(); break;
 		case 62: return new Coding4Raid6noRotate(); break;
+		case 63: return new Coding4Evenodd(); break;
 		// add by wds on Jun 30, 2014 end
 	}
 

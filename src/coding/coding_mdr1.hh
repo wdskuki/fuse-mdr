@@ -10,7 +10,7 @@ using namespace std;
 class Coding4Mdr1 : public CodingLayer {
 private:
 	long long* mdr_I_encoding_matrixB;
-	int strip_size;
+	long long strip_size;
 	bool mdr_I_one_dpDisk_fail_bool_m;
 	bool mdr_I_one_dpDisk_fail_bool_v;
 	bool mdr_I_one_qDisk_fail_bool;
@@ -41,7 +41,7 @@ private:
 	void print_ivmap(map<int, vector<vector<int> > >& ivmap, vector<int>& stripeIndexs);
 	void mdr_print_matrix(long long* matrix, int row, int col);	
 	void print_qDisk_related_block_no(map<int, vector<vector<int> > > & ivvmap);
-
+	void pre_read_into_buf(int failed_disk_id, int strip_num, char*** buf_blocks);
 public:
 	Coding4Mdr1();
 	~Coding4Mdr1();
@@ -49,7 +49,7 @@ public:
 	int decode(int disk_id, char *buf, long long size, long long offset);
 	int mdr_I_recover_oneStripeGroup(int disk_id, char *buf, long long size,
 								long long offset, char*** pread_stripes);
-	int mdr_I_get_strip_size(){return strip_size;}
+	long long mdr_I_get_strip_size(){return strip_size;}
 
 	virtual int recover(int failed_disk_id,char* newdevice);     
 	virtual int recover_enable_node_encode(int failed_disk_id, char* newdevice, int* node_socketid_array);

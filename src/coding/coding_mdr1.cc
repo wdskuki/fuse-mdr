@@ -399,7 +399,7 @@ Coding4Mdr1::Coding4Mdr1()
 {
 	mdr_I_encoding_matrixB = 
 	mdr_I_encoding_matrix(NCFS_DATA->data_disk_num);
-	strip_size = (int)pow(2, NCFS_DATA->data_disk_num);
+	strip_size = (long long)pow(2, NCFS_DATA->data_disk_num);
 	mdr_I_one_dpDisk_fail_bool_m = false;
 	mdr_I_one_dpDisk_fail_bool_v = false;
 	mdr_I_one_qDisk_fail_bool = false;
@@ -859,6 +859,42 @@ int Coding4Mdr1::decode(int disk_id, char *buf, long long size,
 	}
 	AbnormalError();
 	return -1;
+}
+
+void Coding4Mdr1::
+pre_read_into_buf(int failed_disk_id,
+				  int strip_num, 
+				  char*** buf_blocks){
+	int disk_total_num = NCFS_DATA->disk_total_num;
+	int block_size = NCFS_DATA->disk_block_size;
+	int non_read_col; //another column which is not read into buffer
+	struct timeval t1, t2, t3;
+	double duration;
+
+	if(failed_disk_id == disk_total_num-1) // failed_disk_id is Q
+		non_read_col = disk_total_num-2;
+	else // fail_disk_id is P or D
+		non_read_col = disk_total_num-1;
+
+	for(int i = 0; i < disk_total_num; i++){
+		if(i != failed_disk_id && i != non_read_col){
+			int read_disk_id = i;
+			for(int j = 0; j < strip_size; j++){
+				int read_blk_offset = strip_num*strip_size+j;
+				if (NCFS_DATA->run_experiment == 1){
+					gettimeofday(&t1,NULL);
+				}
+				cacheLayer->readDisk(read_disk_id, buf_blocks[i][j], 
+					block_size, read_blk_offset*block_size);
+				if (NCFS_DATA->run_experiment == 1){
+					gettimeofday(&t2,NULL);
+				}
+				duration = (t2.tv_sec - t1.tv_sec) + 
+				(t2.tv_usec-t1.tv_usec)/1000000.0;
+				NCFS_DATA->diskread_time += duration;
+			}
+		}
+	}
 }
 
 int Coding4Mdr1::
