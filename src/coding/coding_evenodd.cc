@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/time.h>
+#include <math.h>
 
 #include <string>
 #include <iostream>
@@ -26,6 +27,7 @@ extern DiskusageReport* diskusageLayer;
 
 
 void print(vector<int>& t){
+	cout<<"+++++++++++++++++++++++++++++++"<<endl;
 	vector<int>:: iterator iter = t.begin();
 	for(; iter != t.end(); iter++){
 		cout<<*iter<<", ";
@@ -45,7 +47,10 @@ Coding4Evenodd::Coding4Evenodd(){
 			matrix[i][j] = 0;
 		}
 	}
-	elems_related_elems();
+	elems_related_elems(row, col);
+	print_elem_hash();
+
+
 }
 
 Coding4Evenodd::~Coding4Evenodd(){
@@ -171,10 +176,10 @@ RELATED_ELEMS Coding4Evenodd::q_related_elems(const PAIR& e, const RELATED_ELEMS
 	return re;
 }
 
-void Coding4Evenodd::elems_related_elems(){
+void Coding4Evenodd::elems_related_elems(int row, int col){
+	int k = col-2;
 	//get all Q elems
 	RELATED_ELEMS qs;
-
 	for(int i = 0; i < row; i++){
 		qs.push_back(make_pair(i, col-1));
 		//debug("<%d, %d>\n", i ,col-1);
@@ -231,12 +236,14 @@ vector<int> Coding4Evenodd::evenodd_find_q_blocks_id(int disk_id, int block_no){
 	vector<int> ret;
 	RELATED_ELEMS::iterator iter = elem_hash[e].begin();
 	for(;iter != elem_hash[e].end(); iter++){
-		int first = iter->first;
-		int second = iter->second;
+		int first = iter->first; //offset in strip
+		int second = iter->second; //disk_id
 		if(second == col-1){
 			ret.push_back(first);
 		}
 	}
+	if(ret.empty())
+		printf("<%d, %d>, ********EMPTY******\n", block_no, disk_id);
 	return ret;
 }
 
@@ -253,7 +260,7 @@ encode(const char *buf, int size)
 	char *buf_parity_disk, *buf_code_disk;
 	int data_disk_num;
 	vector<int> q_blocks_no;
-//	int col;
+	//	int strip_size;
 	//dongsheng wei
 	char temp_char;
 	int data_disk_coeff;
@@ -309,9 +316,9 @@ encode(const char *buf, int size)
 	if(disk_id == 0){
 		(NCFS_DATA->free_offset[disk_total_num-2])++;
 		(NCFS_DATA->free_size[disk_total_num-2])--;
-		if(block_no % col == 0){
-			(NCFS_DATA->free_offset[disk_total_num-1]) += col;
-			(NCFS_DATA->free_size[disk_total_num-1]) -= col;
+		if(block_no % strip_size == 0){
+			(NCFS_DATA->free_offset[disk_total_num-1]) += strip_size;
+			(NCFS_DATA->free_size[disk_total_num-1]) -= strip_size;
 		}
 	}
 
@@ -356,7 +363,7 @@ encode(const char *buf, int size)
 
 
 		//calculate new P block
-		for (j = 0; j < size_request; j++) {
+		for (j = 0; j < size; j++) {
 			buf_p_disk[j] = buf_p_disk[j] ^ buf[j];
 		}
 
@@ -378,17 +385,20 @@ encode(const char *buf, int size)
 			NCFS_DATA->diskwrite_time += duration;			
 		}
 
-		int strip_num = block_no / col;
-		int strip_offset = block_no % col;
+		int strip_num = block_no / strip_size;
+		int strip_offset = block_no % strip_size;
 
 		q_blocks_no = evenodd_find_q_blocks_id(disk_id, strip_offset);
 
 		// cout<<"q_blocks_no\n";
 		// print_ivec(q_blocks_no);
 
+		// //call global print, not the member function print
+		// ::print(q_blocks_no);
+
 		int q_blk_num = q_blocks_no.size();
 		for(i = 0; i < q_blk_num; i++){
-			int q_blk_no = q_blocks_no[i] + strip_num * col;
+			int q_blk_no = q_blocks_no[i] + strip_num * strip_size;
 
 			//read Q blk
 			memset(buf_q_disk, 0, size_request);
@@ -399,6 +409,8 @@ encode(const char *buf, int size)
 
 			retstat = cacheLayer->readDisk(q_disk_id, buf_q_disk, 
 				size_request, q_blk_no * block_size);	
+			
+			printf("READ_Q, <%d, %d>, retstat = %d\n", q_blk_no, q_disk_id, retstat);
 
 		    if (NCFS_DATA->run_experiment == 1){
         		gettimeofday(&t2,NULL);
@@ -408,8 +420,9 @@ encode(const char *buf, int size)
         	}
 
 			//calculate new Q blk
-			for (j = 0; j < size_request; j++) {
+			for (j = 0; j < size; j++) {
 				buf_q_disk[j] = buf_q_disk[j] ^ buf[j];
+				//buf_q_disk[j] = buf_q_disk[j] ^ 1;
 			}
 
 		    if (NCFS_DATA->run_experiment == 1){
@@ -420,8 +433,9 @@ encode(const char *buf, int size)
         	}		
 
 			//write new Q blk
-			retstat = cacheLayer->writeDisk(q_disk_id, buf_q_disk, size, 
-				q_blk_no * block_size);		
+			retstat = cacheLayer->writeDisk(q_disk_id, buf_q_disk, size, q_blk_no*block_size);		
+
+			printf("WRITE_Q, <%d, %d>, retstat = %d\n", q_blk_no, q_disk_id, retstat);
 
 			if (NCFS_DATA->run_experiment == 1){
         		gettimeofday(&t2,NULL);
@@ -604,7 +618,7 @@ pre_read_into_buf(int failed_disk_id,
 		non_read_col = disk_total_num-2;
 	else // fail_disk_id is P or D
 		non_read_col = disk_total_num-1;
-
+	
 	for(int i = 0; i < disk_total_num; i++){
 		if(i != failed_disk_id && i != non_read_col){
 			int read_disk_id = i;
@@ -613,7 +627,7 @@ pre_read_into_buf(int failed_disk_id,
 				if (NCFS_DATA->run_experiment == 1){
 					gettimeofday(&t1,NULL);
 				}
-				cacheLayer->readDisk(read_disk_id, buf_blocks[i][j], 
+				cacheLayer->readDisk(read_disk_id, buf_blocks[j][read_disk_id], 
 					block_size, read_blk_offset*block_size);
 				if (NCFS_DATA->run_experiment == 1){
 					gettimeofday(&t2,NULL);
@@ -701,7 +715,7 @@ evenodd_recover_block(int disk_id,
 						}					
 					}
 				}
-			}else{////fail disk(disk_id) is data Q disk
+			}else{//fail disk(disk_id) is data Q disk
 				PAIR q = make_pair(strip_offset, disk_id);
 				RELATED_ELEMS::iterator iter = elem_hash[q].begin();
 				for(; iter != elem_hash[q].end(); iter++){
@@ -725,7 +739,7 @@ evenodd_recover_block(int disk_id,
 
 
 /*
- * recovering_mdr1: MDR 1 recover
+ * recovering_evenodd: evenodd recover
  *
  * @param failed_disk_id: failed disk id
  * @param newdevice: new device to replace the failed disk

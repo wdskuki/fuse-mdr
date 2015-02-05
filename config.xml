@@ -10,7 +10,7 @@
 			<TotalDiskNumber>5</TotalDiskNumber>
 			<DataDiskNumber>3</DataDiskNumber>
 			<BlockSize>4096</BlockSize>
-			<RaidType>61</RaidType>
+			<RaidType>63</RaidType>
 			<Src>
 				<SrcF>2</SrcF>
 			</Src>
@@ -50,13 +50,6 @@
 					<FreeSize>1048576</FreeSize>
 					<IPaddr>127.0.0.1</IPaddr>
 				</Disk5>
-				<Disk6>
-					<DevName>/dev/loop6</DevName>
-					<TotalSize>1048576</TotalSize>
-					<FreeOffset>0</FreeOffset>
-					<FreeSize>1048576</FreeSize>
-					<IPaddr>127.0.0.1</IPaddr>
-				</Disk6>
 			</DiskSetting>
 		</Disk>
 	</FileSystem>

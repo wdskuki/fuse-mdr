@@ -74,7 +74,7 @@ public:
 	}
 	void print_elem_hash();
 	
-	void elems_related_elems();
+	void elems_related_elems(int row, int col);
 };
 
 #endif

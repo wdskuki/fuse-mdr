@@ -683,6 +683,11 @@ int mdr_I_recover_one_disk(int fail_disk_id){
 //Add by wds on Feb. 2, 2015 begin
 int evenodd_recover_one_disk(int fail_disk_id){
 	  	//printf("debug: mdr_I_recover()\n");
+		// if(fileSystemLayer->codingLayer == NULL)
+		// 	cout<<"fileSystemLayer->codingLayer == NULL"<<endl;
+		// else
+		// 	cout<<"fileSystemLayer->codingLayer != NULL"<<endl;
+
 		Coding4Evenodd * coding_evenodd = dynamic_cast<Coding4Evenodd* >(fileSystemLayer->codingLayer);
 
 	    NCFS_DATA->process_state = 1;
@@ -716,7 +721,6 @@ int evenodd_recover_one_disk(int fail_disk_id){
 				//memset(pread_stripes[i][j], 0, block_size);
 			}
 		}
-
 
 
 		// int r = strip_size / 2;
@@ -876,6 +880,7 @@ CodingLayer* initializeCodingLayer(){
 		//add by wds on Jun 30, 2014 begin
 		case 61: return new Coding4Mdr1(); break;
 		case 62: return new Coding4Raid6noRotate(); break;
+		case 63: return new Coding4Evenodd(); break;
 		//add by wds on Jun 30, 2014 end
 	}
 
