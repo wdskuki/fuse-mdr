@@ -431,15 +431,7 @@ encode(const char *buf, int size)
 					(t1.tv_usec-t2.tv_usec)/1000000.0;
 				NCFS_DATA->encoding_time += duration;        	
         	}		
-
-							FILE * pFile;
-						 	char filename[100];
-							sprintf(filename, "../test/buf_q_disk_<%d_%d>_<%d, %d>",
-								strip_offset, disk_id, q_blk_no, q_disk_id);
-							pFile = fopen(filename, "wb");
-							fwrite(buf_q_disk, sizeof(char), size_request, pFile);
-							fclose(pFile);
-
+        	
 			//write new Q blk
 			retstat = cacheLayer->writeDisk(q_disk_id, buf_q_disk, 
 				size_request, q_blk_no*block_size);		

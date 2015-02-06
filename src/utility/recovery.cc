@@ -669,11 +669,20 @@ int mdr_I_recover_one_disk(int fail_disk_id){
 	    data_size  = __recoversize * (NCFS_DATA->disk_block_size) / (1024 * 1024);
 	    
 	    //printf("Elapsed Time = %fs\n", duration);
-	    printf("Elapsed Time = %f\n", duration);
+	    printf("Repair_time = %f\n", duration);
 	    printf("Repair Throughput = %f MB/s\n", (float)(data_size / duration));
 	    printf("Storage Node Size = %f MB\n", (float)data_size);
 	    printf("Block Size = %d B\n", NCFS_DATA->disk_block_size);
-			
+		
+
+		FILE *time_file;
+		//print time measurement counters
+		if ((time_file = fopen("time_mdr_I","w+")) != NULL){
+			fprintf(time_file,"Repair_time: %lf\n",duration);
+			fprintf(time_file,"Repair Throughput: %lf\n",(float)(data_size / duration));
+			fclose(time_file);
+		}
+
 	    NCFS_DATA->process_state = 0;
 	    return 0;
 	    
@@ -764,11 +773,19 @@ int evenodd_recover_one_disk(int fail_disk_id){
 	    data_size  = __recoversize * (NCFS_DATA->disk_block_size) / (1024 * 1024);
 	    
 	    //printf("Elapsed Time = %fs\n", duration);
-	    printf("Elapsed Time = %f\n", duration);
+	    printf("Repair_time = %f\n", duration);
 	    printf("Repair Throughput = %f MB/s\n", (float)(data_size / duration));
 	    printf("Storage Node Size = %f MB\n", (float)data_size);
 	    printf("Block Size = %d B\n", NCFS_DATA->disk_block_size);
-			
+
+		FILE *time_file;
+		//print time measurement counters
+		if ((time_file = fopen("time_evenodd","w+")) != NULL){
+			fprintf(time_file,"Repair_time: %lf\n",duration);
+			fprintf(time_file,"Repair Throughput: %lf\n",(float)(data_size / duration));
+			fclose(time_file);
+		}
+
 	    NCFS_DATA->process_state = 0;
 	    return 0;
 	    

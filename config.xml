@@ -10,44 +10,44 @@
 			<TotalDiskNumber>5</TotalDiskNumber>
 			<DataDiskNumber>3</DataDiskNumber>
 			<BlockSize>4096</BlockSize>
-			<RaidType>63</RaidType>
+			<RaidType>61</RaidType>
 			<Src>
 				<SrcF>2</SrcF>
 			</Src>
 			<DiskSetting>
 				<Disk1>
 					<DevName>/dev/loop1</DevName>
-					<TotalSize>1048576</TotalSize>
+					<TotalSize>1073741824</TotalSize>
 					<FreeOffset>0</FreeOffset>
-					<FreeSize>1048576</FreeSize>
+					<FreeSize>1073741824</FreeSize>
 					<IPaddr>127.0.0.1</IPaddr>
 				</Disk1>
 				<Disk2>
 					<DevName>/dev/loop2</DevName>
-					<TotalSize>1048576</TotalSize>
+					<TotalSize>1073741824</TotalSize>
 					<FreeOffset>0</FreeOffset>
-					<FreeSize>1048576</FreeSize>
+					<FreeSize>1073741824</FreeSize>
 					<IPaddr>127.0.0.1</IPaddr>
 				</Disk2>
 				<Disk3>
 					<DevName>/dev/loop3</DevName>
-					<TotalSize>1048576</TotalSize>
+					<TotalSize>1073741824</TotalSize>
 					<FreeOffset>0</FreeOffset>
-					<FreeSize>1048576</FreeSize>
+					<FreeSize>1073741824</FreeSize>
 					<IPaddr>127.0.0.1</IPaddr>
 				</Disk3>
 				<Disk4>
 					<DevName>/dev/loop4</DevName>
-					<TotalSize>1048576</TotalSize>
+					<TotalSize>1073741824</TotalSize>
 					<FreeOffset>0</FreeOffset>
-					<FreeSize>1048576</FreeSize>
+					<FreeSize>1073741824</FreeSize>
 					<IPaddr>127.0.0.1</IPaddr>
 				</Disk4>
 				<Disk5>
 					<DevName>/dev/loop5</DevName>
-					<TotalSize>1048576</TotalSize>
+					<TotalSize>1073741824</TotalSize>
 					<FreeOffset>0</FreeOffset>
-					<FreeSize>1048576</FreeSize>
+					<FreeSize>1073741824</FreeSize>
 					<IPaddr>127.0.0.1</IPaddr>
 				</Disk5>
 			</DiskSetting>
