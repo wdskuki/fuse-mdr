@@ -422,7 +422,7 @@ encode(const char *buf, int size)
 			//calculate new Q blk
 			for (j = 0; j < size; j++) {
 				buf_q_disk[j] = buf_q_disk[j] ^ buf[j];
-				//buf_q_disk[j] = buf_q_disk[j] ^ 1;
+				//buf_q_disk[j] = buf_q_disk[j] ^ '1';
 			}
 
 		    if (NCFS_DATA->run_experiment == 1){
@@ -432,8 +432,17 @@ encode(const char *buf, int size)
 				NCFS_DATA->encoding_time += duration;        	
         	}		
 
+							FILE * pFile;
+						 	char filename[100];
+							sprintf(filename, "../test/buf_q_disk_<%d_%d>_<%d, %d>",
+								strip_offset, disk_id, q_blk_no, q_disk_id);
+							pFile = fopen(filename, "wb");
+							fwrite(buf_q_disk, sizeof(char), size_request, pFile);
+							fclose(pFile);
+
 			//write new Q blk
-			retstat = cacheLayer->writeDisk(q_disk_id, buf_q_disk, size, q_blk_no*block_size);		
+			retstat = cacheLayer->writeDisk(q_disk_id, buf_q_disk, 
+				size_request, q_blk_no*block_size);		
 
 			printf("WRITE_Q, <%d, %d>, retstat = %d\n", q_blk_no, q_disk_id, retstat);
 
