@@ -735,22 +735,25 @@ int evenodd_recover_one_disk(int fail_disk_id){
 		// int r = strip_size / 2;
 		 // char pread_stripes[r][disk_total_num][block_size];
 			
-		for(int i = 0; i < __recoversize; i++){
+		for(int i = 0; i < __recoversize; i+= strip_size){
 		    // for(int i = 0; i < r; i++){
 		    // 	for(int j = 0; j < disk_total_num; j++){
 		    // 		memset(pread_stripes[i][j], 0, block_size);
 		    // 	}
 		    // }
 
-		    long long offset = i * block_size;
+
+		    long long offset = i;
 
 		    long long buf_size = block_size;
 		    char buf[buf_size];
 		    bool in_buf = false;
-		    int retstat = coding_evenodd->evenodd_recover_block(fail_disk_id, 
-		    		buf, buf_size, offset, pread_stripes, in_buf);
-		    retstat = cacheLayer->writeDisk(fail_disk_id,buf,
-		    	buf_size,offset);
+		    for(int j = 0; j < strip_size; j++){
+			    int retstat = coding_evenodd->evenodd_recover_block(fail_disk_id, 
+			    		buf, buf_size, block_size*(offset+j), pread_stripes, in_buf);
+			    retstat = cacheLayer->writeDisk(fail_disk_id,buf,
+			    	buf_size,block_size*(offset+j));
+			}
 	    }
 		    
 	    for(int i = 0; i < r; i++){
