@@ -39,7 +39,8 @@ public:
 	int decode(int disk_id, char *buf, long long size, long long offset);
 	int evenodd_recover_block(int disk_id, char *buf, long long size,
 								long long offset, char*** pread_stripes, bool& in_buf);
-
+	int evenodd_recover_block2(int disk_id, char *buf, long long size,
+		long long offset, char*** pread_stripes, bool& in_buf, double& func_cost_time);
 	int evenodd_get_strip_size(){return strip_size;}
 
 	virtual int recover(int failed_disk_id,char* newdevice);     

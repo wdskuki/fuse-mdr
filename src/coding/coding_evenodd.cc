@@ -738,6 +738,134 @@ evenodd_recover_block(int disk_id,
 	return -1;
 }
 
+int Coding4Evenodd::
+evenodd_recover_block2(int disk_id, 
+						  char *buf, 
+						  long long size, 
+						  long long offset,
+						  char*** pread_stripes,
+						  bool& in_buf,
+						  double& func_cost_time)
+{
+	int retstat;
+	char *temp_buf;
+
+	int disk_failed_no;
+	int disk_another_failed_id;	//id of second failed disk
+
+	int q_disk_id, p_disk_id;
+	int block_size;
+	long long block_no;
+	int disk_total_num;
+	int data_disk_coeff;
+	char temp_char;
+
+	int g1, g2, g12;
+	char *P_temp;
+	char *Q_temp;
+
+	struct timeval t1, t2, t3, starttime, endtime;
+	double duration;
+
+	memset(buf, 0, size);
+
+	vector<vector<int> > repair_q_blocks_no;
+
+	disk_total_num = NCFS_DATA->disk_total_num;
+	block_size = NCFS_DATA->disk_block_size;
+	block_no = offset / block_size;
+
+	q_disk_id = disk_total_num - 1;
+	p_disk_id = disk_total_num - 2;
+
+	if (NCFS_DATA->disk_status[disk_id] == 0) {
+		if (NCFS_DATA->run_experiment == 1){
+       		gettimeofday(&t1,NULL);
+        }
+		retstat = cacheLayer->readDisk(disk_id, buf, size, offset);
+		if (NCFS_DATA->run_experiment == 1){
+       		gettimeofday(&t2,NULL);
+        	duration = (t2.tv_sec - t1.tv_sec) + 
+				(t2.tv_usec-t1.tv_usec)/1000000.0;
+			NCFS_DATA->diskread_time += duration;
+        }
+		return retstat;
+	}
+	else{
+		//check the number of failed disks
+		disk_failed_no = 0;
+		for (int i = 0; i < disk_total_num; i++) {
+			if (NCFS_DATA->disk_status[i] == 1) {
+				(disk_failed_no)++;
+				if (i != disk_id) {
+					disk_another_failed_id = i;
+				}
+			}
+		}
+
+		int strip_num = block_no / strip_size;
+		int strip_offset = block_no % strip_size;
+		
+		if(!in_buf){
+			in_buf = !in_buf;
+			gettimeofday(&starttime,NULL);
+			pre_read_into_buf(disk_id, strip_num, pread_stripes);
+			gettimeofday(&endtime,NULL);
+			func_cost_time += endtime.tv_sec - starttime.tv_sec + (endtime.tv_usec-starttime.tv_usec)/1000000.0;
+		}
+
+
+		if(disk_failed_no == 1){ //fail disk id = disk_id
+			if((disk_id >= 0) && (disk_id < disk_total_num-1)){
+				//fail disk(disk_id) is data disk or P disk	
+				for(int i = 0; i < disk_total_num-1; i++){
+					if(i != disk_id){					
+						if (NCFS_DATA->run_experiment == 1){
+				       		gettimeofday(&t1,NULL);
+				        }						
+						for(long long j = 0; j < size; j++){
+							buf[j] = buf[j] ^ pread_stripes[strip_offset][i][j];
+						}
+						if (NCFS_DATA->run_experiment == 1){
+				       		gettimeofday(&t2,NULL);
+				        	duration = (t2.tv_sec - t1.tv_sec) + 
+								(t2.tv_usec-t1.tv_usec)/1000000.0;
+							NCFS_DATA->encoding_time += duration;
+				        }					
+					}
+				}
+			}else{//fail disk(disk_id) is data Q disk
+				PAIR q = make_pair(strip_offset, disk_id);
+				RELATED_ELEMS::iterator iter = elem_hash[q].begin();
+				for(; iter != elem_hash[q].end(); iter++){
+					int read_disk_id = iter->second;
+					int read_strip_offset = iter->first;
+						if (NCFS_DATA->run_experiment == 1){
+				       		gettimeofday(&t1,NULL);
+				        }		
+					for(long long j = 0; j < size; j++){
+						buf[j] = buf[j] ^ 
+							pread_stripes[read_strip_offset][read_disk_id][j];
+					}
+						if (NCFS_DATA->run_experiment == 1){
+				       		gettimeofday(&t2,NULL);
+				        	duration = (t2.tv_sec - t1.tv_sec) + 
+								(t2.tv_usec-t1.tv_usec)/1000000.0;
+							NCFS_DATA->encoding_time += duration;
+				        }
+				}
+			}
+		}
+		else{
+			printf("EVENODD number of failed disks is larger than 1.\n");
+			return -1;
+		}
+	}
+	AbnormalError();
+	return -1;
+}
+
+
 
 /*
  * recovering_evenodd: evenodd recover

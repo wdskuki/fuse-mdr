@@ -861,42 +861,6 @@ int Coding4Mdr1::decode(int disk_id, char *buf, long long size,
 	return -1;
 }
 
-void Coding4Mdr1::
-pre_read_into_buf(int failed_disk_id,
-				  int strip_num, 
-				  char*** buf_blocks){
-	int disk_total_num = NCFS_DATA->disk_total_num;
-	int block_size = NCFS_DATA->disk_block_size;
-	int non_read_col; //another column which is not read into buffer
-	struct timeval t1, t2, t3;
-	double duration;
-
-	if(failed_disk_id == disk_total_num-1) // failed_disk_id is Q
-		non_read_col = disk_total_num-2;
-	else // fail_disk_id is P or D
-		non_read_col = disk_total_num-1;
-
-	for(int i = 0; i < disk_total_num; i++){
-		if(i != failed_disk_id && i != non_read_col){
-			int read_disk_id = i;
-			for(int j = 0; j < strip_size; j++){
-				int read_blk_offset = strip_num*strip_size+j;
-				if (NCFS_DATA->run_experiment == 1){
-					gettimeofday(&t1,NULL);
-				}
-				cacheLayer->readDisk(read_disk_id, buf_blocks[i][j], 
-					block_size, read_blk_offset*block_size);
-				if (NCFS_DATA->run_experiment == 1){
-					gettimeofday(&t2,NULL);
-				}
-				duration = (t2.tv_sec - t1.tv_sec) + 
-				(t2.tv_usec-t1.tv_usec)/1000000.0;
-				NCFS_DATA->diskread_time += duration;
-			}
-		}
-	}
-}
-
 int Coding4Mdr1::
 mdr_I_recover_oneStripeGroup(
 	int disk_id, char *buf, long long size,
@@ -1167,6 +1131,378 @@ mdr_I_recover_oneStripeGroup(
 	return -1;
 }
 
+void Coding4Mdr1::
+pre_read_into_buf(int failed_disk_id,
+				  int strip_num, 
+				  char*** buf_blocks){
+	int disk_total_num = NCFS_DATA->disk_total_num;
+	int block_size = NCFS_DATA->disk_block_size;
+	int non_read_col; //another column which is not read into buffer
+	struct timeval t1, t2, t3;
+	double duration;
+
+	if(failed_disk_id == disk_total_num-1){ // Q disk
+		for(int i = 0; i < disk_total_num; i++){
+			if(i != failed_disk_id){
+				int read_disk_id = i;
+				for(int j = 0; j < strip_size; j++){
+					int read_strip_offset = j;
+					int offset = strip_num*strip_size+read_strip_offset;
+					cacheLayer->readDisk(read_disk_id, buf_blocks[read_strip_offset][read_disk_id], 
+						block_size, offset*block_size);					
+				}
+			}
+		}
+	}else{ //D or P disk
+		mdr_I_one_dpDisk_fail_stripeIndex = mdr_I_repair_dpDisk_stripeIndexs(
+			failed_disk_id, NCFS_DATA->data_disk_num);
+		vector<int> :: iterator iter = mdr_I_one_dpDisk_fail_stripeIndex.begin();
+		for(; iter != mdr_I_one_dpDisk_fail_stripeIndex.end(); iter++){
+			int read_strip_offset = *iter;
+			for(int i = 0; i < disk_total_num; i++){
+				if(i != failed_disk_id){
+					int read_disk_id = i;
+					int offset = strip_num*strip_size+read_strip_offset;
+					cacheLayer->readDisk(read_disk_id, buf_blocks[read_strip_offset][read_disk_id], 
+						block_size, offset*block_size);						
+				}
+			}
+		}
+	}
+}
+
+
+int Coding4Mdr1::
+mdr_I_recover_oneStripeGroup2(
+	int disk_id, char *buf, long long size,
+	long long offset, char*** pread_stripes, double& func_cost_time)
+{
+	int retstat;
+	char *temp_buf;
+
+	int disk_failed_no;
+	int disk_another_failed_id;	//id of second failed disk
+
+	int q_disk_id, p_disk_id;
+	int block_size;
+	long long block_no;
+	int disk_total_num;
+	int data_disk_coeff;
+	char temp_char;
+
+	int g1, g2, g12;
+	char *P_temp;
+	char *Q_temp;
+
+	struct timeval t1, t2, t3, starttime,endtime;
+	double duration;
+
+	memset(buf, 0, size);
+
+	temp_buf = (char *)malloc(sizeof(char) * size);
+	memset(temp_buf, 0, size);
+
+	vector<vector<int> > repair_q_blocks_no;
+
+	disk_total_num = NCFS_DATA->disk_total_num;
+	block_size = NCFS_DATA->disk_block_size;
+	block_no = offset / block_size;
+
+	q_disk_id = disk_total_num - 1;
+	p_disk_id = disk_total_num - 2;
+
+	if (NCFS_DATA->disk_status[disk_id] == 0) {
+		if (NCFS_DATA->run_experiment == 1){
+       		gettimeofday(&t1,NULL);
+        }
+		retstat = cacheLayer->readDisk(disk_id, buf, size, offset);
+		if (NCFS_DATA->run_experiment == 1){
+       		gettimeofday(&t2,NULL);
+        	duration = (t2.tv_sec - t1.tv_sec) + 
+				(t2.tv_usec-t1.tv_usec)/1000000.0;
+			NCFS_DATA->diskread_time += duration;
+        }
+
+		return retstat;
+	}
+	else{
+		//check the number of failed disks
+		disk_failed_no = 0;
+		for (int i = 0; i < disk_total_num; i++) {
+			if (NCFS_DATA->disk_status[i] == 1) {
+				(disk_failed_no)++;
+				if (i != disk_id) {
+					disk_another_failed_id = i;
+				}
+			}
+		}
+
+		int strip_num = block_no / strip_size;
+		int strip_offset = block_no % strip_size;
+		
+
+		if(disk_failed_no == 1){ //fail disk id = disk_id
+			if((disk_id >= 0) && (disk_id < disk_total_num-1)){
+				//fail disk(disk_id) is data disk or P disk	
+
+				//find the stripe indexs which is must be read
+				if(mdr_I_one_dpDisk_fail_bool_v == false){
+					mdr_I_one_dpDisk_fail_bool_v = true;
+					gettimeofday(&starttime,NULL);
+					mdr_I_one_dpDisk_fail_stripeIndex = 
+						mdr_I_repair_dpDisk_stripeIndexs(
+							disk_id, NCFS_DATA->data_disk_num);
+					gettimeofday(&endtime,NULL);
+					func_cost_time += endtime.tv_sec - starttime.tv_sec + (endtime.tv_usec-starttime.tv_usec)/1000000.0;
+				}
+
+				//find the block indexs which must be repaired by the stripes in the buf
+				if(mdr_I_one_dpDisk_fail_bool_m == false){
+					mdr_I_one_dpDisk_fail_bool_m = true;
+					gettimeofday(&starttime,NULL);
+					mdr_I_one_dpDisk_fail_nonStripeIndex = 
+						mdr_I_repair_dpDisk_nonstripeIndexs_blocks_no(disk_id, 
+						 	mdr_I_one_dpDisk_fail_stripeIndex);
+					gettimeofday(&endtime,NULL);
+					func_cost_time += endtime.tv_sec - starttime.tv_sec + (endtime.tv_usec-starttime.tv_usec)/1000000.0;
+				}				
+
+				//read the essencial stripes into the pread_stripes
+				int s_size = mdr_I_one_dpDisk_fail_stripeIndex.size();
+				for(int i = 0; i < s_size; i++){
+					int blk_num = strip_num*strip_size
+					 + mdr_I_one_dpDisk_fail_stripeIndex[i];
+					for(int j = 0; j < disk_total_num; j++){
+						if(j != disk_id){
+							gettimeofday(&starttime,NULL);
+							retstat = cacheLayer->readDisk(
+								j, pread_stripes[i][j], 
+								block_size, 
+								blk_num*block_size);
+							gettimeofday(&endtime,NULL);
+							func_cost_time += endtime.tv_sec - starttime.tv_sec + (endtime.tv_usec-starttime.tv_usec)/1000000.0;
+				        	duration = (endtime.tv_sec - starttime.tv_sec) + 
+								(endtime.tv_usec-starttime.tv_usec)/1000000.0;
+							NCFS_DATA->diskread_time += duration;
+							  // FILE * pFile;
+							  // char filename[50];
+							  // sprintf(filename, "./wds/pread_stripe_%d_%d", i, j);
+							  // pFile = fopen(filename, "wb");
+							  // fwrite (pread_stripes[i][j], sizeof(char), 
+							  // 					block_size, pFile);
+							  // fclose (pFile);
+
+						}
+					}
+				}
+
+				//repair the blk in the buf strips
+				for(int i = 0; i < s_size; i++){
+					for(int j = 0; j < disk_total_num -1; j++){
+						if(j != disk_id){
+							if (NCFS_DATA->run_experiment == 1){
+					       		gettimeofday(&t1,NULL);
+					        }
+							for(long long j2 = 0; 
+								j2 < block_size; 
+								j2++){
+								pread_stripes[i][disk_id][j2] ^=
+								 pread_stripes[i][j][j2];
+							}
+							if (NCFS_DATA->run_experiment == 1){
+					       		gettimeofday(&t2,NULL);
+					        	duration = (t2.tv_sec - t1.tv_sec) + 
+									(t2.tv_usec-t1.tv_usec)/1000000.0;
+								NCFS_DATA->encoding_time += duration;
+					        }
+						}
+					}
+					int buf_offset = mdr_I_one_dpDisk_fail_stripeIndex[i];
+
+					//cout<<"buf_offset*block_size = "<<buf_offset*block_size<<endl;
+
+					// if(i == 0){
+					// 	FILE * pFile;
+					//     char filename[50];
+					// 	sprintf(filename, "./wds/pread_stripe");
+					// 	pFile = fopen(filename, "wb");
+					// 	fwrite (pread_stripes[i][disk_id], sizeof(char), 
+					// 							block_size, pFile);
+					// 	fclose (pFile);
+					// }
+					
+					//strcpy(buf+(buf_offset*block_size), pread_stripes[i][disk_id]);
+					for(long long j2 = 0; 
+						j2 < block_size; 
+						j2++){
+						*(buf+(buf_offset*block_size+j2)) =
+						 pread_stripes[i][disk_id][j2];
+					}
+
+					// if(i == 0){
+					// 	FILE * pFile;
+					//     char filename[50];
+					// 	sprintf(filename, "./wds/buf");
+					// 	pFile = fopen(filename, "wb");
+					// 	fwrite (buf, sizeof(char), block_size, pFile);
+					// 	fclose (pFile);
+					// }				
+
+				}
+
+				//repair other blks in the failed disk
+				gettimeofday(&starttime,NULL);
+				set<int> stripeIndexs_set;
+				stripeIndexs_set.insert(
+					mdr_I_one_dpDisk_fail_stripeIndex.begin(), 
+					mdr_I_one_dpDisk_fail_stripeIndex.end()
+					);
+				gettimeofday(&endtime,NULL);
+				func_cost_time += endtime.tv_sec - starttime.tv_sec + (endtime.tv_usec-starttime.tv_usec)/1000000.0;
+				for(int i = 0; i < strip_size; i++){
+					if(stripeIndexs_set.find(i) ==
+					 stripeIndexs_set.end()){
+						vector<vector<int> > iivec =
+						 mdr_I_one_dpDisk_fail_nonStripeIndex[i];
+						
+						int iivec_size = iivec.size();
+						if(iivec_size != NCFS_DATA->disk_total_num){
+							printf("error: repair reading blks num\n");
+							exit(1);
+						}
+				
+						int blk_index = i;
+
+						for(int j = 0; j < iivec_size; j++){
+						
+						int parcitipant_disk_id = j;
+
+							if(!iivec[j].empty()){
+								int ivec_size = iivec[j].size();
+								for(int i2 = 0; i2 < ivec_size; i2++){
+									gettimeofday(&starttime,NULL);
+									int par_disk_blk = 
+									mdr_I_repair_chg_blkIndexOffset_in_buf(
+										parcitipant_disk_id,iivec[j][i2],
+										 mdr_I_one_dpDisk_fail_stripeIndex);
+									gettimeofday(&endtime,NULL);
+									func_cost_time += endtime.tv_sec - 
+									starttime.tv_sec + (endtime.tv_usec-starttime.tv_usec)/1000000.0;
+									if(par_disk_blk == -1){
+										cout<<"parcitipant_disk_id = "<<parcitipant_disk_id<<endl;
+										printf("iivec[%d][%d] = %d\n", j, i2, iivec[j][i2]);
+										//cout<<"ivec[j][i2] = "<<iivec[j][i2]<<endl;
+
+										print_ivec(mdr_I_one_dpDisk_fail_stripeIndex);
+										printf("error: par_disk_blk\n");
+										exit(1);				
+									}
+
+									char *src = pread_stripes[par_disk_blk][parcitipant_disk_id];
+									char *des = buf + blk_index*block_size;
+									if (NCFS_DATA->run_experiment == 1){
+							       		gettimeofday(&t1,NULL);
+							        }
+									for(long long j2 = 0; j2 < block_size; j2++){
+										des[j2] ^= src[j2];
+									}
+									if (NCFS_DATA->run_experiment == 1){
+							       		gettimeofday(&t2,NULL);
+							        	duration = (t2.tv_sec - t1.tv_sec) + 
+											(t2.tv_usec-t1.tv_usec)/1000000.0;
+										NCFS_DATA->encoding_time += duration;
+							        }
+								}
+							}
+						}						
+					}
+				}				
+			}
+			else if(disk_id == disk_total_num - 1){//fail disk(disk_id) is Q disk
+				//read essential blk into buffer
+
+				for(int i = 0; i < strip_size; i++){
+					for(int j = 0; j < disk_total_num-1; j++){
+						if (NCFS_DATA->run_experiment == 1){
+					      	gettimeofday(&t1,NULL);
+					    }
+						retstat = cacheLayer->readDisk(j, pread_stripes[i][j], 
+							block_size, (block_no + i)*block_size);
+						if (NCFS_DATA->run_experiment == 1){
+							gettimeofday(&t2,NULL);
+				        	duration = (t2.tv_sec - t1.tv_sec) + 
+								(t2.tv_usec-t1.tv_usec)/1000000.0;
+							NCFS_DATA->diskread_time += duration;
+				        }
+							// FILE * pFile;
+						 	// char filename[100];
+							// sprintf(filename, "./wds/pread_stripe_%d_%d_%d",strip_num, i, j);
+							// cout<<filename<<endl;
+							// pFile = fopen(filename, "wb");
+							// fwrite(pread_stripes[i][j], sizeof(char), 
+							// 						block_size, pFile);
+							// fclose(pFile);
+							// cout<<"---------"<<endl;
+						
+					}
+				}
+				//mdr_print_matrix(mdr_I_encoding_matrixB, strip_size, NCFS_DATA->data_disk_num+1);
+				if(mdr_I_one_qDisk_fail_bool == false)
+				{
+					mdr_I_one_qDisk_fail_bool = true;
+					for(int i = 0; i < strip_size; i++){
+						gettimeofday(&starttime,NULL);
+						mdr_I_one_qDisk_fail_stripeIndex[i] = mdr_I_repair_qDisk_blocks_id(i);
+						gettimeofday(&endtime,NULL);
+						func_cost_time += endtime.tv_sec - starttime.tv_sec + (endtime.tv_usec-starttime.tv_usec)/1000000.0;
+						//print_iivec(mdr_I_one_qDisk_fail_stripeIndex[i]);
+					}
+					//print_qDisk_related_block_no(mdr_I_one_qDisk_fail_stripeIndex);
+				}
+				for(int i = 0; i < strip_size; i++){
+					vector< vector<int> > iivec = mdr_I_one_qDisk_fail_stripeIndex[i];
+					for(int j = 0; j < iivec.size(); j++){
+						if(!iivec[j].empty()){
+							for(int j2 = 0; j2 < iivec[j].size(); j2++){
+								int blk_off = iivec[j][j2];
+								if (NCFS_DATA->run_experiment == 1){
+						       		gettimeofday(&t1,NULL);
+						        }
+								for(long long j3 = 0; j3 < block_size; j3++){
+									pread_stripes[i][disk_total_num-1][j3] ^= 
+										pread_stripes[blk_off][j][j3];
+								}
+								if (NCFS_DATA->run_experiment == 1){
+						       		gettimeofday(&t2,NULL);
+						        	duration = (t2.tv_sec - t1.tv_sec) + 
+										(t2.tv_usec-t1.tv_usec)/1000000.0;
+									NCFS_DATA->encoding_time += duration;
+						        }	
+							}
+						}
+					}
+				}
+
+				for(int i = 0; i < strip_size; i++){
+					char *des = buf + i*block_size;
+					for(long long j3 = 0; j3 < block_size; j3++){
+						des[j3] = pread_stripes[i][disk_total_num-1][j3];
+					}
+				}
+			}
+		}
+		else{
+			printf("MDR_I number of failed disks is larger than 1.\n");
+			return -1;
+		}
+
+		free(temp_buf);
+		return size;
+
+	}
+	AbnormalError();
+	return -1;
+}
 
 /*
  * recovering_mdr1: MDR 1 recover

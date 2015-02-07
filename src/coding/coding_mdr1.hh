@@ -49,6 +49,8 @@ public:
 	int decode(int disk_id, char *buf, long long size, long long offset);
 	int mdr_I_recover_oneStripeGroup(int disk_id, char *buf, long long size,
 								long long offset, char*** pread_stripes);
+	int mdr_I_recover_oneStripeGroup2(int disk_id, char *buf, long long size,
+		long long offset, char*** pread_stripes, double& func_cost_time);
 	long long mdr_I_get_strip_size(){return strip_size;}
 
 	virtual int recover(int failed_disk_id,char* newdevice);     

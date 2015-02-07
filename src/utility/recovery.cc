@@ -606,8 +606,8 @@ int mdr_I_recover_one_disk(int fail_disk_id){
 	    int disk_total_num = NCFS_DATA->disk_total_num;
 	    int block_size = NCFS_DATA->disk_block_size;
 
-	    struct timeval starttime, endtime;
-	    double duration;
+	    struct timeval t1, t2, starttime, endtime;
+	    double duration, temp_duration,func_cost_time;
 	    double data_size;
 
 	    gettimeofday(&starttime,NULL);
@@ -620,7 +620,12 @@ int mdr_I_recover_one_disk(int fail_disk_id){
 	    //storageLayer->disk_fd[fail_disk_id] = open(NCFS_DATA->dev_name[fail_disk_id],O_RDWR);
 	    //storageLayer->DiskRenew(fail_disk_id);
 		char*** pread_stripes;
-		int r = strip_size;
+		int r;
+		if(fail_disk_id != disk_total_num-1){
+			r = strip_size/2;
+		}else{
+			r = strip_size;
+		}
 		pread_stripes = (char ***)malloc(sizeof(char** ) * r);
 		for(int i = 0; i < r; i++){
 			pread_stripes[i] = (char **)malloc(sizeof(char* )* disk_total_num);
@@ -632,7 +637,7 @@ int mdr_I_recover_one_disk(int fail_disk_id){
 
 		// int r = strip_size / 2;
 		 // char pread_stripes[r][disk_total_num][block_size];
-			
+		func_cost_time = 0;
 		for(int i = 0; i < __recoversize; i += strip_size){
 		    for(int i = 0; i < r; i++){
 		    	for(int j = 0; j < disk_total_num; j++){
@@ -644,10 +649,19 @@ int mdr_I_recover_one_disk(int fail_disk_id){
 
 		    long long buf_size = strip_size * block_size;
 		    char buf[buf_size];
-
-		    int retstat = coding_mdr1->mdr_I_recover_oneStripeGroup(fail_disk_id, 
-		    												buf, buf_size, offset, pread_stripes);
+		    
+		    int retstat = coding_mdr1->mdr_I_recover_oneStripeGroup2(fail_disk_id, 
+		    	buf, buf_size, offset, pread_stripes, func_cost_time);
+		    if (NCFS_DATA->run_experiment == 1){
+				gettimeofday(&t1,NULL);
+			}
 		    retstat = cacheLayer->writeDisk(fail_disk_id,buf,strip_size*block_size,offset);
+			if (NCFS_DATA->run_experiment == 1){
+					gettimeofday(&t2,NULL);
+			}
+			temp_duration = (t2.tv_sec - t1.tv_sec) + 
+			(t2.tv_usec-t1.tv_usec)/1000000.0;
+			NCFS_DATA->diskwrite_time += temp_duration;
 	    }
 		    
 	    for(int i = 0; i < r; i++){
@@ -666,10 +680,12 @@ int mdr_I_recover_one_disk(int fail_disk_id){
 	    fprintf(stderr,"\n\n\nRecovery on disk %d, new device %s Done.\n\n\n",fail_disk_id,_newdevice);
 
 	    duration = endtime.tv_sec - starttime.tv_sec + (endtime.tv_usec-starttime.tv_usec)/1000000.0;
+	    //duration -= func_cost_time;
 	    data_size  = __recoversize * (NCFS_DATA->disk_block_size) / (1024 * 1024);
 	    
 	    //printf("Elapsed Time = %fs\n", duration);
 	    printf("Repair_time = %f\n", duration);
+	    printf("read_into_buffer_time = %f\n", func_cost_time);
 	    printf("Repair Throughput = %f MB/s\n", (float)(data_size / duration));
 	    printf("Storage Node Size = %f MB\n", (float)data_size);
 	    printf("Block Size = %d B\n", NCFS_DATA->disk_block_size);
@@ -706,8 +722,8 @@ int evenodd_recover_one_disk(int fail_disk_id){
 	    int disk_total_num = NCFS_DATA->disk_total_num;
 	    int block_size = NCFS_DATA->disk_block_size;
 
-	    struct timeval starttime, endtime;
-	    double duration;
+	    struct timeval t1, t2, starttime, endtime;
+	    double duration, temp_duration, func_cost_time;
 	    double data_size;
 
 	    
@@ -734,13 +750,13 @@ int evenodd_recover_one_disk(int fail_disk_id){
 
 		// int r = strip_size / 2;
 		 // char pread_stripes[r][disk_total_num][block_size];
-			
+		func_cost_time = 0;
 		for(int i = 0; i < __recoversize; i+= strip_size){
-		    // for(int i = 0; i < r; i++){
-		    // 	for(int j = 0; j < disk_total_num; j++){
-		    // 		memset(pread_stripes[i][j], 0, block_size);
-		    // 	}
-		    // }
+		    for(int i = 0; i < r; i++){
+		    	for(int j = 0; j < disk_total_num; j++){
+		    		memset(pread_stripes[i][j], 0, block_size);
+		    	}
+		    }
 
 
 		    long long offset = i;
@@ -749,10 +765,20 @@ int evenodd_recover_one_disk(int fail_disk_id){
 		    char buf[buf_size];
 		    bool in_buf = false;
 		    for(int j = 0; j < strip_size; j++){
-			    int retstat = coding_evenodd->evenodd_recover_block(fail_disk_id, 
-			    		buf, buf_size, block_size*(offset+j), pread_stripes, in_buf);
+			    int retstat = coding_evenodd->evenodd_recover_block2(fail_disk_id, 
+			    		buf, buf_size, block_size*(offset+j), pread_stripes, in_buf, func_cost_time);
+			    
+			    if (NCFS_DATA->run_experiment == 1){
+					gettimeofday(&t1,NULL);
+				}
 			    retstat = cacheLayer->writeDisk(fail_disk_id,buf,
 			    	buf_size,block_size*(offset+j));
+				if (NCFS_DATA->run_experiment == 1){
+					gettimeofday(&t2,NULL);
+				}
+				temp_duration = (t2.tv_sec - t1.tv_sec) + 
+				(t2.tv_usec-t1.tv_usec)/1000000.0;
+				NCFS_DATA->diskwrite_time += temp_duration;
 			}
 	    }
 		    
@@ -777,6 +803,7 @@ int evenodd_recover_one_disk(int fail_disk_id){
 	    
 	    //printf("Elapsed Time = %fs\n", duration);
 	    printf("Repair_time = %f\n", duration);
+	    printf("read_into_buffer_time = %f\n", func_cost_time);
 	    printf("Repair Throughput = %f MB/s\n", (float)(data_size / duration));
 	    printf("Storage Node Size = %f MB\n", (float)data_size);
 	    printf("Block Size = %d B\n", NCFS_DATA->disk_block_size);
