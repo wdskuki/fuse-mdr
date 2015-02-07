@@ -31,3 +31,5 @@ clean:
 	rm -f analyze.o
 	@echo "Deleting read performance"
 	rm -f readperformance.o
+	@echo "Deleting notify"
+	rm -f notify.o
