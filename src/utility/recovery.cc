@@ -684,7 +684,7 @@ int mdr_I_recover_one_disk(int fail_disk_id){
 	    data_size  = __recoversize * (NCFS_DATA->disk_block_size) / (1024 * 1024);
 	    
 	    //printf("Elapsed Time = %fs\n", duration);
-	    printf("Repair_time = %f\n", duration);
+	    printf("Repair_time is = %f\n", duration);
 	    printf("read_into_buffer_time = %f\n", func_cost_time);
 	    printf("Repair Throughput = %f MB/s\n", (float)(data_size / duration));
 	    printf("Storage Node Size = %f MB\n", (float)data_size);
@@ -802,7 +802,7 @@ int evenodd_recover_one_disk(int fail_disk_id){
 	    data_size  = __recoversize * (NCFS_DATA->disk_block_size) / (1024 * 1024);
 	    
 	    //printf("Elapsed Time = %fs\n", duration);
-	    printf("Repair_time = %f\n", duration);
+	    printf("Repair_time is = %f\n", duration);
 	    printf("read_into_buffer_time = %f\n", func_cost_time);
 	    printf("Repair Throughput = %f MB/s\n", (float)(data_size / duration));
 	    printf("Storage Node Size = %f MB\n", (float)data_size);
