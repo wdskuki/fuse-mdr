@@ -50,6 +50,7 @@ ncfs_destroy()
 #include "../coding/coding_mdr1.hh"
 #include "../coding/coding_raid6_noRotate.hh"
 #include "../coding/coding_evenodd.hh"
+#include "../coding/coding_rdp.hh"
 
 #include <ctype.h>
 #include <dirent.h>
@@ -1110,6 +1111,7 @@ CodingLayer* initializeCodingLayer()
 		case 61: return new Coding4Mdr1(); break;
 		case 62: return new Coding4Raid6noRotate(); break;
 		case 63: return new Coding4Evenodd(); break;
+		case 64: return new Coding4Rdp(); break;
 		// add by wds on Jun 30, 2014 end
 	}
 

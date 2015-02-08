@@ -42,6 +42,7 @@
 #include "../coding/coding_mdr1.hh"
 #include "../coding/coding_raid6_noRotate.hh"
 #include "../coding/coding_evenodd.hh"
+#include "../coding/coding_rdp.hh"
 
 struct ncfs_state* NCFS_DATA;
 FileSystemLayer* fileSystemLayer;
@@ -822,6 +823,124 @@ int evenodd_recover_one_disk(int fail_disk_id){
 }
 //Add by wds on Feb. 2, 2015 end 
 
+
+//Add by wds on Feb. 8, 2015 begin
+int rdp_recover_one_disk(int fail_disk_id){
+	  	//printf("debug: mdr_I_recover()\n");
+		// if(fileSystemLayer->codingLayer == NULL)
+		// 	cout<<"fileSystemLayer->codingLayer == NULL"<<endl;
+		// else
+		// 	cout<<"fileSystemLayer->codingLayer != NULL"<<endl;
+
+		Coding4Rdp * coding_rdp = dynamic_cast<Coding4Rdp* >(fileSystemLayer->codingLayer);
+
+	    NCFS_DATA->process_state = 1;
+	    int __recoversize = NCFS_DATA->disk_size[fail_disk_id];
+	    int strip_size = coding_rdp->rdp_get_strip_size();
+
+	    int disk_total_num = NCFS_DATA->disk_total_num;
+	    int block_size = NCFS_DATA->disk_block_size;
+
+	    struct timeval t1, t2, starttime, endtime;
+	    double duration, temp_duration, func_cost_time;
+	    double data_size;
+
+	    
+
+	    gettimeofday(&starttime,NULL);
+	    NCFS_DATA->dev_name[fail_disk_id] = (char*)realloc(NCFS_DATA->dev_name[fail_disk_id],strlen(_newdevice));
+
+	    memset(NCFS_DATA->dev_name[fail_disk_id],0,strlen(_newdevice)+1);
+	    strncpy(NCFS_DATA->dev_name[fail_disk_id],_newdevice,strlen(_newdevice));
+	    cacheLayer->setDiskName(fail_disk_id,_newdevice);
+
+			
+		char*** pread_stripes;
+		int r = strip_size;
+		pread_stripes = (char ***)malloc(sizeof(char** ) * r);
+		for(int i = 0; i < r; i++){
+			pread_stripes[i] = (char **)malloc(sizeof(char* )* disk_total_num);
+			for(int j = 0; j < disk_total_num; j++){
+				pread_stripes[i][j] = (char *)malloc(sizeof(char)* block_size);
+				//memset(pread_stripes[i][j], 0, block_size);
+			}
+		}
+
+
+		// int r = strip_size / 2;
+		 // char pread_stripes[r][disk_total_num][block_size];
+		func_cost_time = 0;
+		for(int i = 0; i < __recoversize; i+= strip_size){
+		    for(int i = 0; i < r; i++){
+		    	for(int j = 0; j < disk_total_num; j++){
+		    		memset(pread_stripes[i][j], 0, block_size);
+		    	}
+		    }
+
+
+		    long long offset = i;
+
+		    long long buf_size = block_size;
+		    char buf[buf_size];
+		    bool in_buf = false;
+		    for(int j = 0; j < strip_size; j++){
+			    int retstat = coding_rdp->rdp_recover_block2(fail_disk_id, 
+			    		buf, buf_size, block_size*(offset+j), pread_stripes, in_buf, func_cost_time);
+			    
+			    if (NCFS_DATA->run_experiment == 1){
+					gettimeofday(&t1,NULL);
+				}
+			    retstat = cacheLayer->writeDisk(fail_disk_id,buf,
+			    	buf_size,block_size*(offset+j));
+				if (NCFS_DATA->run_experiment == 1){
+					gettimeofday(&t2,NULL);
+				}
+				temp_duration = (t2.tv_sec - t1.tv_sec) + 
+				(t2.tv_usec-t1.tv_usec)/1000000.0;
+				NCFS_DATA->diskwrite_time += temp_duration;
+			}
+	    }
+		    
+	    for(int i = 0; i < r; i++){
+	    	for(int j = 0; j < disk_total_num; j++){
+	    		free(pread_stripes[i][j]);
+	    	}
+	    	free(pread_stripes[i]);
+	    }
+	    free(pread_stripes);	
+		    	    
+
+	    //NCFS_DATA->disk_status[fail_disk_id] = 0;
+	    fileSystemLayer->set_device_status(fail_disk_id,0);
+
+	    gettimeofday(&endtime,NULL);
+
+	    fprintf(stderr,"\n\n\nRecovery on disk %d, new device %s Done.\n\n\n",fail_disk_id,_newdevice);
+
+	    duration = endtime.tv_sec - starttime.tv_sec + (endtime.tv_usec-starttime.tv_usec)/1000000.0;
+	    data_size  = __recoversize * (NCFS_DATA->disk_block_size) / (1024 * 1024);
+	    
+	    //printf("Elapsed Time = %fs\n", duration);
+	    printf("Repair_time is = %f\n", duration);
+	    printf("read_into_buffer_time = %f\n", func_cost_time);
+	    printf("Repair Throughput = %f MB/s\n", (float)(data_size / duration));
+	    printf("Storage Node Size = %f MB\n", (float)data_size);
+	    printf("Block Size = %d B\n", NCFS_DATA->disk_block_size);
+
+		FILE *time_file;
+		//print time measurement counters
+		if ((time_file = fopen("time_evenodd","w+")) != NULL){
+			fprintf(time_file,"Repair_time: %lf\n",duration);
+			fprintf(time_file,"Repair Throughput: %lf\n",(float)(data_size / duration));
+			fclose(time_file);
+		}
+
+	    NCFS_DATA->process_state = 0;
+	    return 0;
+	    
+}
+//Add by wds on Feb. 8, 2015 end 
+
 void RecoveryTool::recover(){
 
 	int coding_type = NCFS_DATA->disk_raid_type;
@@ -847,6 +966,8 @@ void RecoveryTool::recover(){
 					mdr_I_recover_one_disk(fail_disk_id);
 				}else if(coding_type == 63){
 					evenodd_recover_one_disk(fail_disk_id);
+				}else if(coding_type == 64){
+					rdp_recover_one_disk(fail_disk_id);
 				}
 				//add by wds on Jun 30, 2014 end
 
@@ -928,6 +1049,7 @@ CodingLayer* initializeCodingLayer(){
 		case 61: return new Coding4Mdr1(); break;
 		case 62: return new Coding4Raid6noRotate(); break;
 		case 63: return new Coding4Evenodd(); break;
+		case 64: return new Coding4Rdp(); break;
 		//add by wds on Jun 30, 2014 end
 	}
 
