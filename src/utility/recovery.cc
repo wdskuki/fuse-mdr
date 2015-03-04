@@ -656,7 +656,10 @@ int mdr_I_recover_one_disk(int fail_disk_id){
 		    if (NCFS_DATA->run_experiment == 1){
 				gettimeofday(&t1,NULL);
 			}
-		    retstat = cacheLayer->writeDisk(fail_disk_id,buf,strip_size*block_size,offset);
+			for(int j = 0; j < strip_size; j++){
+				retstat = cacheLayer->writeDisk(fail_disk_id, buf+j*block_size, block_size, offset+j*block_size);
+			}
+		    //retstat = cacheLayer->writeDisk(fail_disk_id,buf,strip_size*block_size,offset);
 			if (NCFS_DATA->run_experiment == 1){
 					gettimeofday(&t2,NULL);
 			}
